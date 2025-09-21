@@ -1,8 +1,11 @@
 package com.shadow2y.luthen.service.repository;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shadow2y.luthen.service.AppConfig;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 public class LuthenHibernateBundle extends HibernateBundle<AppConfig> {
 
@@ -12,9 +15,18 @@ public class LuthenHibernateBundle extends HibernateBundle<AppConfig> {
         );
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("database")
+    private final DataSourceFactory database = new DataSourceFactory();
+
+    public DataSourceFactory getDataSourceFactory() {
+        return database;
+    }
+
     @Override
     public DataSourceFactory getDataSourceFactory(AppConfig configuration) {
-        return configuration.getDataSourceFactory();
+        return getDataSourceFactory();
     }
 
     @Override

@@ -14,15 +14,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class AppConfig extends Configuration {
 
-    @Valid
-    @NotNull
-    @JsonProperty("database")
-    private final DataSourceFactory database = new DataSourceFactory();
-
-    public DataSourceFactory getDataSourceFactory() {
-        return database;
-    }
-
     private final String jwtSecret; // base64 or raw secret; prefer a long base64 secret
 
     private int jwtExpiryMinutes = 60; // access token lifetime
