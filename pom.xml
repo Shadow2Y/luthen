@@ -6,31 +6,36 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.shadow2y.luthen</groupId>
-    <artifactId>authentication-service</artifactId>
+    <artifactId>luthen</artifactId>
     <version>1.0.0</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
-    <name>Authentication Microservice</name>
+    <name>luthen</name>
     <description>Reusable authentication service with signup, login, session management</description>
+    <modules>
+        <module>api</module>
+        <module>service</module>
+        <module>client</module>
+    </modules>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>23</maven.compiler.source>
+        <maven.compiler.target>23</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependency Versions -->
-        <lombok.version>1.18.32</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
         <postgresql.version>42.7.3</postgresql.version>
         <bcrypt.version>0.4</bcrypt.version>
         <hikaricp.version>5.1.0</hikaricp.version>
         <slf4j.version>2.0.13</slf4j.version>
         <logback.version>1.5.6</logback.version>
-        <jackson.version>2.17.1</jackson.version>
         <junit.version>5.10.2</junit.version>
         <mockito.version>5.12.0</mockito.version>
         <testcontainers.version>1.19.8</testcontainers.version>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
+        <dropwizard.version>4.0.1</dropwizard.version>
     </properties>
 
     <dependencies>
@@ -40,6 +45,12 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.shadow2y</groupId>
+            <artifactId>config</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Database -->
@@ -73,18 +84,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
-        </dependency>
-
-        <!-- JSON Processing (optional - for API responses) -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
 
         <!-- Validation -->
@@ -146,6 +145,7 @@
             <version>3.24.2</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -156,8 +156,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.plugin.version}</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                     <encoding>UTF-8</encoding>
                     <annotationProcessorPaths>
                         <!-- Lombok annotation processor -->
@@ -218,26 +218,6 @@
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Lombok Maven Plugin (optional - for delombok) -->
-            <plugin>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok-maven-plugin</artifactId>
-                <version>1.18.20.0</version>
-                <configuration>
-                    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-                    <outputDirectory>${project.build.directory}/delombok</outputDirectory>
-                    <addOutputDirectory>false</addOutputDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>delombok</goal>
                         </goals>
                     </execution>
                 </executions>

@@ -1,0 +1,32 @@
+database:
+  driverClass: org.postgresql.Driver
+  user: luthen_service
+  password: Andor
+  url: jdbc:postgresql://localhost:5432/luthen_db
+
+  # Connection pool settings
+  minSize: 8
+  maxSize: 32
+  checkConnectionWhileIdle: false
+  evictionInterval: 10s
+  minIdleTime: 1 minute
+
+  # Validation
+  validationQuery: "SELECT 1"
+  validationQueryTimeout: 3s
+  checkConnectionOnBorrow: true
+
+  # Logging
+  logValidationErrors: true
+  logAbandonedConnections: true
+
+  properties:
+    charSet: UTF-8
+    hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate.hbm2ddl.auto: validate
+    hibernate.show_sql: false
+    hibernate.format_sql: true
+
+
+jwtSecret: 123
+jwtExpiryMinutes: 10
