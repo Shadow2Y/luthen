@@ -1,32 +1,21 @@
-package com.shadow2y.luthen.service.repository;
+package com.shadow2y.luthen.service.repository.common;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shadow2y.luthen.service.AppConfig;
+import com.shadow2y.luthen.service.repository.tables.User;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 public class LuthenHibernateBundle extends HibernateBundle<AppConfig> {
 
     public LuthenHibernateBundle() {
         super(
-                Entity.class
+                User.class
         );
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("database")
-    private final DataSourceFactory database = new DataSourceFactory();
-
-    public DataSourceFactory getDataSourceFactory() {
-        return database;
     }
 
     @Override
     public DataSourceFactory getDataSourceFactory(AppConfig configuration) {
-        return getDataSourceFactory();
+        return configuration.getDatabase();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.service.repository;
+package com.shadow2y.luthen.service.repository.common;
 
 import io.dropwizard.db.DataSourceFactory;
 import org.hibernate.SessionFactory;

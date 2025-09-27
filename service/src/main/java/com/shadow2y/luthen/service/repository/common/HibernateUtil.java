@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.service.repository;
+package com.shadow2y.luthen.service.repository.common;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;

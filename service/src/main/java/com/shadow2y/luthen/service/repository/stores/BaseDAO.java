@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.service.repository.dao;
+package com.shadow2y.luthen.service.repository.stores;
 
 import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.SessionFactory;

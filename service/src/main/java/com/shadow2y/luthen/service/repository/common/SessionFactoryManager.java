@@ -1,18 +1,22 @@
-package com.shadow2y.luthen.service.repository;
+package com.shadow2y.luthen.service.repository.common;
 
 
+import com.shadow2y.luthen.service.AppConfig;
+import com.shadow2y.luthen.service.repository.tables.User;
+import lombok.Getter;
 import org.hibernate.SessionFactory;
 
 public class SessionFactoryManager {
 
+    @Getter
     private static SessionFactory sessionFactory;
 
-    public static SessionFactory createSessionFactory(HibernateConfiguration config) {
+    public static SessionFactory createSessionFactory(AppConfig config) {
         try {
             var configuration = new org.hibernate.cfg.Configuration();
 
             // Database connection settings
-            var dataSourceFactory = config.getDataSourceFactory();
+            var dataSourceFactory = config.getDatabase();
             configuration.setProperty("hibernate.connection.driver_class", dataSourceFactory.getDriverClass());
             configuration.setProperty("hibernate.connection.url", dataSourceFactory.getUrl());
             configuration.setProperty("hibernate.connection.username", dataSourceFactory.getUser());
@@ -35,7 +39,7 @@ public class SessionFactoryManager {
             configuration.setProperty("hibernate.hikari.maxLifetime", "1200000");
 
             // Add annotated entity classes
-            configuration.addAnnotatedClass(Entity.class);
+            configuration.addAnnotatedClass(User.class);
 
             // Build SessionFactory
             sessionFactory = configuration.buildSessionFactory();
@@ -45,10 +49,6 @@ public class SessionFactoryManager {
             System.err.println("Failed to create SessionFactory: " + ex);
             throw new ExceptionInInitializerError(ex);
         }
-    }
-
-    public static SessionFactory getSessionFactory() {
-        return sessionFactory;
     }
 
     public static void shutdown() {

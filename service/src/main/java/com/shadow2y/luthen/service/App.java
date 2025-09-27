@@ -1,10 +1,11 @@
 package com.shadow2y.luthen.service;
 
+import com.shadow2y.luthen.auth.LuthenBundle;
 import com.shadow2y.luthen.service.health.DatabaseHealthCheck;
-import com.shadow2y.luthen.service.repository.LuthenHibernateBundle;
-import com.shadow2y.luthen.service.repository.dao.EntityDAO;
-import com.shadow2y.luthen.service.resource.EntityResource;
-import com.shadow2y.luthen.service.service.EntityService;
+import com.shadow2y.luthen.service.repository.common.LuthenHibernateBundle;
+import com.shadow2y.luthen.service.repository.stores.UserStore;
+import com.shadow2y.luthen.service.resource.AuthResource;
+import com.shadow2y.luthen.service.service.AuthService;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
@@ -28,6 +29,8 @@ public class App extends Application<AppConfig> {
     public void run(AppConfig appConfig, Environment environment) {
         var sessionFactory = hibernateBundle.getSessionFactory();
 
+        environment.jersey().register(new LuthenBundle<AppConfig>(null));
+
         registerDAOs(environment, sessionFactory);
         registerServices(environment);
         registerResources(environment);
@@ -35,20 +38,20 @@ public class App extends Application<AppConfig> {
     }
 
     public void registerDAOs(Environment environment, SessionFactory sessionFactory) {
-        environment.jersey().register(new EntityDAO(sessionFactory));
+        environment.jersey().register(new UserStore(sessionFactory));
     }
 
     public void registerServices(Environment environment) {
         environment.jersey().register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(EntityService.class).to(EntityService.class);
+                bind(AuthService.class).to(AuthService.class);
             }
         });
     }
 
     public void registerResources(Environment environment) {
-        environment.jersey().register(EntityResource.class);
+        environment.jersey().register(AuthResource.class);
     }
 
     public void registerHealthChecks(Environment environment, SessionFactory sessionFactory) {

@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.api.models;
+package com.shadow2y.luthen.api.models.auth;
 
 import com.shadow2y.luthen.api.models.intf.LuthenResponse;
 import lombok.AllArgsConstructor;

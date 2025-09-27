@@ -15,10 +15,11 @@
     <modules>
         <module>api</module>
         <module>service</module>
-        <module>client</module>
+        <module>auth</module>
     </modules>
 
     <properties>
+        <luthen.version>${pom.version}</luthen.version>
         <maven.compiler.source>23</maven.compiler.source>
         <maven.compiler.target>23</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -45,12 +46,6 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.shadow2y</groupId>
-            <artifactId>config</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Database -->
