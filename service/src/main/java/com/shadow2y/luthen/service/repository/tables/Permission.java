@@ -1,7 +1,9 @@
 package com.shadow2y.luthen.service.repository.tables;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "permissions")
 public class Permission {

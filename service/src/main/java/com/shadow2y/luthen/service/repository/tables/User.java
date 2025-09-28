@@ -2,18 +2,16 @@ package com.shadow2y.luthen.service.repository.tables;
 
 import com.shadow2y.luthen.service.model.enums.UserStatus;
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.security.auth.Subject;
-import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
-@Getter
+@Data
 @Entity
 @Table(name = "users")
 @NamedQueries({
@@ -55,7 +53,7 @@ public class User {
     @Getter
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles;
+    private List<Role> roles;
 
     public User(String username, String email, String password) {
         this.email = email;
@@ -64,8 +62,8 @@ public class User {
         this.status = UserStatus.ACTIVE;
     }
 
-    public Set<String> getRoleNames() {
-        return roles.stream().map(Role::getName).collect(Collectors.toSet());
+    public List<String> getRoleNames() {
+        return roles.stream().map(Role::getName).toList();
     }
 
 }

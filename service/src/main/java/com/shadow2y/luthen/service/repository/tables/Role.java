@@ -1,11 +1,12 @@
 package com.shadow2y.luthen.service.repository.tables;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 
-import java.security.Permission;
 import java.util.Set;
 
+@Data
 @Entity
 @Table(name = "roles")
 public class Role {

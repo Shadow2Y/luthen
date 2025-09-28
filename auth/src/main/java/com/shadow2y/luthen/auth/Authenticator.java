@@ -7,9 +7,9 @@ import com.nimbusds.jwt.SignedJWT;
 import com.shadow2y.luthen.api.models.auth.UserAuth;
 
 import java.security.interfaces.RSAPublicKey;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 
 public class Authenticator implements io.dropwizard.auth.Authenticator<String, UserAuth> {
 
@@ -25,7 +25,7 @@ public class Authenticator implements io.dropwizard.auth.Authenticator<String, U
     public Optional<UserAuth> authenticate(String token) {
         try {
             var jwt = getClaims(token);
-            var user = new UserAuth(jwt.getExpirationTime(), jwt.getSubject(), Set.of(jwt.getStringListClaim("roles").toArray(new String[0])));
+            var user = new UserAuth(LocalDate.from(jwt.getExpirationTime().toInstant()), jwt.getSubject(), jwt.getStringListClaim("roles"));
             return Optional.of(user);
         } catch (Exception e) {
             return Optional.empty();
