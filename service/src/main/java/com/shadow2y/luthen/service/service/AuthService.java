@@ -1,9 +1,11 @@
 package com.shadow2y.luthen.service.service;
 
 import com.shadow2y.luthen.api.models.auth.LoginRequest;
+import com.shadow2y.luthen.api.models.auth.SignupRequest;
 import com.shadow2y.luthen.api.models.auth.UserAuth;
 import com.shadow2y.luthen.service.exception.AuthenticationException;
-import com.shadow2y.luthen.service.exception.UserAlreadyExistsException;
+import com.shadow2y.luthen.service.exception.Error;
+import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.service.model.enums.UserStatus;
 import com.shadow2y.luthen.service.repository.stores.UserStore;
 import com.shadow2y.luthen.service.repository.tables.User;
@@ -13,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
@@ -28,15 +29,12 @@ public class AuthService {
         this.passwordService = passwordService;
     }
 
-    public User signUp(String username, String email, String password) {
-        // Check if user already exists
-        if (userStore.existsByUsername(username)) {
-            throw new UserAlreadyExistsException("Username already exists :: " + username);
-        }
+    public User signUp(SignupRequest signupRequest) throws LuthenError {
+        String username = signupRequest.getUsername();
+        String email = signupRequest.getEmail();
+        String password = signupRequest.getPassword();
 
-        if (userStore.existsByEmail(email)) {
-            throw new UserAlreadyExistsException("Email already exists :: " + email);
-        }
+        validateNewUser(username, email);
 
         String hashedPassword = passwordService.hashPassword(password);
         User user = new User(username, email, hashedPassword);
@@ -44,7 +42,7 @@ public class AuthService {
         return userStore.save(user);
     }
 
-    public String login(LoginRequest request) {
+    public String login(LoginRequest request) throws LuthenError {
         var user = getUser(request.getUsername(), request.getEmail());
 
         validateEntity(user, request);
@@ -59,6 +57,16 @@ public class AuthService {
 
         if (!UserStatus.ACTIVE.equals(user.getStatus())) {
             throw new AuthenticationException("Account is deactivated");
+        }
+    }
+
+    private void validateNewUser(String username, String email) throws LuthenError {
+        if (userStore.existsByUsername(username)) {
+            throw new LuthenError(Error.USERNAME_ALREADY_EXISTS);
+        }
+
+        if (userStore.existsByEmail(email)) {
+            throw new LuthenError(Error.EMAIL_ALREADY_EXISTS);
         }
     }
 
@@ -83,12 +91,12 @@ public class AuthService {
 //        return userStore.findById(sessionOpt.get().getUserId());
 //    }
 
-    public void changePassword(String username, String currentPassword, String newPassword) {
+    public void changePassword(String username, String currentPassword, String newPassword) throws LuthenError {
         User user = getUser(username,null);
 
         // Verify current password
         if (!passwordService.verifyPassword(currentPassword, user.getPassword())) {
-            throw new AuthenticationException("Current password is incorrect");
+            throw new LuthenError(Error.INCORRECT_OLD_PASSWORD);
         }
 
         // Update password
@@ -101,7 +109,7 @@ public class AuthService {
     }
 
 
-    public User getUser(String username, String email) {
+    public User getUser(String username, String email) throws LuthenError {
         Optional<User> user = Optional.empty();
         if(!StringUtils.isEmpty(username)) {
             user = userStore.findByUsername(username);
@@ -109,7 +117,7 @@ public class AuthService {
             user = userStore.findByEmail(email);
         }
         if(user.isEmpty()) {
-            throw new AuthenticationException("Username or Password is invalid");
+            throw new LuthenError(Error.INVALID_CREDENTIALS);
         }
         return user.get();
     }

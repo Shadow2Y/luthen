@@ -15,11 +15,12 @@ import java.util.Optional;
 public class UserStore extends AbstractDAO<User> {
 
     @PersistenceContext
-    private EntityManager em;
+    private final EntityManager em;
 
     @Inject
-    public UserStore(SessionFactory factory) {
+    public UserStore(EntityManager em, SessionFactory factory) {
         super(factory);
+        this.em = em;
     }
 
     @Transactional
@@ -68,6 +69,5 @@ public class UserStore extends AbstractDAO<User> {
     public void delete(User user) {
         em.remove(em.contains(user) ? user : em.merge(user));
     }
-
 
 }

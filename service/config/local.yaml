@@ -1,8 +1,8 @@
 database:
   driverClass: org.postgresql.Driver
-  user: luthen_service
-  password: Andor
-  url: jdbc:postgresql://localhost:5432/luthen_db
+  user: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+  url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
 
   # Connection pool settings
   minSize: 8
@@ -27,6 +27,11 @@ database:
     hibernate.show_sql: false
     hibernate.format_sql: true
 
+swaggerBundleConfiguration:
+  resourcePackage: com.shadow2y.luthen.service.resource
+  title: Luthen API
+  version: 1.0.0
+  description: API for Luthen application
 
 jwtSecret: 123
 jwtExpiryMinutes: 10

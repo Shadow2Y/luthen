@@ -47,6 +47,12 @@
             <version>${dropwizard.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.smoketurner</groupId>
+            <artifactId>dropwizard-swagger</artifactId>
+            <version>4.0.5-1</version>
+        </dependency>
+
         <!-- JJWT (JSON Web Token) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
