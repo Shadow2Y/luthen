@@ -4,10 +4,9 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.shadow2y.luthen.api.models.auth.UserAuth;
+import com.shadow2y.luthen.api.response.UserAuth;
 
 import java.security.interfaces.RSAPublicKey;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.Optional;
 
@@ -25,7 +24,7 @@ public class Authenticator implements io.dropwizard.auth.Authenticator<String, U
     public Optional<UserAuth> authenticate(String token) {
         try {
             var jwt = getClaims(token);
-            var user = new UserAuth(LocalDate.from(jwt.getExpirationTime().toInstant()), jwt.getSubject(), jwt.getStringListClaim("roles"));
+            var user = new UserAuth(jwt.getSubject(), jwt.getStringListClaim("roles"));
             return Optional.of(user);
         } catch (Exception e) {
             return Optional.empty();

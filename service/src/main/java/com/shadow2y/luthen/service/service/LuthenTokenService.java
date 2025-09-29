@@ -4,7 +4,7 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.*;
-import com.shadow2y.luthen.api.models.auth.UserAuth;
+import com.shadow2y.luthen.api.response.UserAuth;
 import com.shadow2y.luthen.service.service.intf.TokenService;
 
 import java.security.interfaces.RSAPrivateKey;
@@ -31,9 +31,10 @@ public class LuthenTokenService implements TokenService {
                 .build();
     }
 
-    public String createAccessToken(UserAuth userAuth) {
+    public UserAuth createAccessToken(UserAuth userAuth) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessMinutes * 60);
+
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .issuer(issuer)
                 .subject(userAuth.getUsername())
@@ -49,7 +50,8 @@ public class LuthenTokenService implements TokenService {
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
-        return signedJWT.serialize();
+        userAuth.setAccessToken(signedJWT.serialize()).setCreatedAt(now).setExpiresAt(exp);
+        return userAuth;
     }
 
     public boolean verifyAccessToken(String token) {

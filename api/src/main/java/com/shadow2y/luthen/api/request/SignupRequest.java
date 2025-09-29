@@ -1,8 +1,10 @@
-package com.shadow2y.luthen.api.models.auth;
+package com.shadow2y.luthen.api.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import java.util.Set;
 
 @Data
 public class SignupRequest {
@@ -15,5 +17,7 @@ public class SignupRequest {
 
     @Valid @NotNull
     String password;
+
+    Set<String> roles;
 
 }

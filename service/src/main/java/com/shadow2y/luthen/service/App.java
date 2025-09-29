@@ -4,6 +4,8 @@ import com.shadow2y.luthen.auth.LuthenBundle;
 import com.shadow2y.luthen.service.exception.mapper.LuthenExceptionMapper;
 import com.shadow2y.luthen.service.health.DatabaseHealthCheck;
 import com.shadow2y.luthen.service.repository.common.LuthenHibernateBundle;
+import com.shadow2y.luthen.service.repository.stores.PermissionStore;
+import com.shadow2y.luthen.service.repository.stores.RoleStore;
 import com.shadow2y.luthen.service.repository.stores.UserStore;
 import com.shadow2y.luthen.service.resource.AuthResource;
 import com.shadow2y.luthen.service.resource.HealthResource;
@@ -59,8 +61,9 @@ public class App extends Application<AppConfig> {
     }
 
     public void registerServices(Environment environment, SessionFactory sessionFactory) {
-        var entityManager = hibernateBundle.getSessionFactory().createEntityManager();
-        var userStore = new UserStore(entityManager, sessionFactory);
+        var userStore = new UserStore(sessionFactory);
+        var roleStore = new RoleStore(sessionFactory);
+        var permissionStore = new PermissionStore(sessionFactory);
         environment.jersey().register(userStore);
 
         // Generate test RSA key pair for dev/testing
@@ -69,8 +72,8 @@ public class App extends Application<AppConfig> {
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 
         var passwordService = new PasswordServiceImpl();
-        var tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", 60L);
-        var authService = new AuthService(userStore, passwordService, tokenService);
+        var tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", 1L);
+        var authService = new AuthService(tokenService, passwordService, userStore, roleStore, permissionStore);
 
         environment.jersey().register(new AbstractBinder() {
             @Override protected void configure() {

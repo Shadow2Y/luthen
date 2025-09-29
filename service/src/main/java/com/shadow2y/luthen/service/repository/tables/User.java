@@ -1,9 +1,11 @@
 package com.shadow2y.luthen.service.repository.tables;
 
-import com.shadow2y.luthen.service.model.enums.UserStatus;
+import com.shadow2y.luthen.api.summary.UserSummary;
+import com.shadow2y.luthen.api.models.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,6 +22,7 @@ import java.util.List;
         @NamedQuery(name = "User.findByStatus", query = "SELECT u FROM User u WHERE u.status = :status"),
         @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username LIKE :username")
 })
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -64,6 +67,11 @@ public class User {
 
     public List<String> getRoleNames() {
         return roles.stream().map(Role::getName).toList();
+    }
+
+    public UserSummary toSummary() {
+        var roleSummaries = roles.stream().map(Role::toSummary).toList();
+        return new UserSummary(username, email, status, roleSummaries, created_at);
     }
 
 }

@@ -1,25 +1,31 @@
-package com.shadow2y.luthen.api.models.auth;
+package com.shadow2y.luthen.api.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
-import java.time.LocalDate;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 
 @Data
-@AllArgsConstructor
+@Accessors(chain = true)
 public class UserAuth implements Principal {
 
-    private LocalDate expiry;
+    private final String username;
 
-    private String username;
+    private String accessToken;
+
+    private Instant createdAt;
+
+    private Instant expiresAt;
 
     private List<String> roles;
+
+    public UserAuth(String username, List<String> roles) {
+        this.username = username;
+        this.roles = roles;
+    }
 
     @Override
     public String getName() {

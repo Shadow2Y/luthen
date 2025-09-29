@@ -1,35 +1,49 @@
 package com.shadow2y.luthen.service.service;
 
-import com.shadow2y.luthen.api.models.auth.LoginRequest;
-import com.shadow2y.luthen.api.models.auth.SignupRequest;
-import com.shadow2y.luthen.api.models.auth.UserAuth;
-import com.shadow2y.luthen.service.exception.AuthenticationException;
+import com.shadow2y.luthen.api.request.CreateRoleRequest;
+import com.shadow2y.luthen.api.request.LoginRequest;
+import com.shadow2y.luthen.api.response.LoginResponse;
+import com.shadow2y.luthen.api.request.SignupRequest;
+import com.shadow2y.luthen.api.response.UserAuth;
+import com.shadow2y.luthen.api.summary.PermissionSummary;
+import com.shadow2y.luthen.api.summary.RoleSummary;
+import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
-import com.shadow2y.luthen.service.model.enums.UserStatus;
+import com.shadow2y.luthen.api.models.UserStatus;
+import com.shadow2y.luthen.service.repository.stores.PermissionStore;
+import com.shadow2y.luthen.service.repository.stores.RoleStore;
 import com.shadow2y.luthen.service.repository.stores.UserStore;
+import com.shadow2y.luthen.service.repository.tables.Permission;
+import com.shadow2y.luthen.service.repository.tables.Role;
 import com.shadow2y.luthen.service.repository.tables.User;
 import com.shadow2y.luthen.service.service.intf.PasswordService;
 import com.shadow2y.luthen.service.service.intf.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class AuthService {
-    private final UserStore userStore;
-    private final PasswordService passwordService;
-    private final TokenService tokenService;
 
-    public AuthService(UserStore userStore, PasswordService passwordService, TokenService tokenService) {
+    private final TokenService tokenService;
+    private final PasswordService passwordService;
+    private final UserStore userStore;
+    private final RoleStore roleStore;
+    private final PermissionStore permissionStore;
+
+    public AuthService(TokenService tokenService, PasswordService passwordService, UserStore userStore, RoleStore roleStore, PermissionStore permissionStore) {
+        this.roleStore = roleStore;
         this.userStore = userStore;
+        this.permissionStore = permissionStore;
         this.tokenService = tokenService;
         this.passwordService = passwordService;
     }
 
-    public User signUp(SignupRequest signupRequest) throws LuthenError {
+    public UserSummary signUp(SignupRequest signupRequest) throws LuthenError {
         String username = signupRequest.getUsername();
         String email = signupRequest.getEmail();
         String password = signupRequest.getPassword();
@@ -39,24 +53,71 @@ public class AuthService {
         String hashedPassword = passwordService.hashPassword(password);
         User user = new User(username, email, hashedPassword);
 
-        return userStore.save(user);
+        log.info("User registered successfully: {}", username);
+        user = userStore.save(user);
+        return user.toSummary();
     }
 
-    public String login(LoginRequest request) throws LuthenError {
+    public User validateAndAddRoles(User user, List<String> roleNames) throws LuthenError {
+        if (roleNames == null || roleNames.isEmpty()) {
+            return user;
+        }
+        var roles = roleStore.getRoles(roleNames);
+        if (roles.size() != roleNames.size()) {
+            throw new LuthenError(Error.ROLE_NOT_FOUND);
+        }
+        user.getRoles().addAll(roles);
+        user = userStore.save(user);
+        return user;
+    }
+
+    public Role validateAndAddPermissions(Role role, List<String> permissionList) throws LuthenError {
+        if(permissionList == null || permissionList.isEmpty()) {
+            return role;
+        }
+        var permissions = validateGetPermissions(permissionList);
+        role.getPermissions().addAll(permissions);
+        role = roleStore.save(role);
+        return role;
+    }
+
+    public Set<Permission> validateGetPermissions(List<String> permissions) throws LuthenError {
+        var permissionsList = permissionStore.getPermissions(permissions);
+        if(permissions.size() != permissionsList.size()) {
+            throw new LuthenError(Error.PERMISSION_NOT_FOUND);
+        }
+        return permissionsList;
+    }
+
+    public PermissionSummary getOrCreatePermission(String permissionName, String description) {
+        return permissionStore.getOrCreatePermission(permissionName, description).toSummary();
+    }
+
+    public RoleSummary getOrCreateRole(CreateRoleRequest request) throws LuthenError {
+        var role = roleStore.updateOrCreateRole(request.name, request.description, validateGetPermissions(request.permissions));
+        log.info("Executed getOrCreateRole for role: {}", role.getName());
+        return role.toSummary();
+    }
+
+    public LoginResponse login(LoginRequest request) throws LuthenError {
         var user = getUser(request.getUsername(), request.getEmail());
 
         validateEntity(user, request);
-
-        return tokenService.createAccessToken(new UserAuth(LocalDate.now().plusDays(1), user.getUsername(), user.getRoleNames()));
+        var userAuth = tokenService.createAccessToken(new UserAuth(user.getUsername(), user.getRoleNames()));
+        return new LoginResponse()
+                .setAccessToken(userAuth.getAccessToken())
+                .setCreatedAt(userAuth.getCreatedAt().toEpochMilli())
+                .setExpiresAt(userAuth.getExpiresAt().toEpochMilli())
+                ;
     }
 
-    private void validateEntity(User user, LoginRequest request) {
+    private void validateEntity(User user, LoginRequest request) throws LuthenError {
         if (!passwordService.verifyPassword(request.getPassword(), user.getPassword())) {
-            throw new AuthenticationException("Invalid credentials");
+            throw new LuthenError(Error.INVALID_CREDENTIALS);
         }
 
         if (!UserStatus.ACTIVE.equals(user.getStatus())) {
-            throw new AuthenticationException("Account is deactivated");
+            throw new LuthenError(Error.ACCOUNT_DEACTIVATED);
         }
     }
 
@@ -117,7 +178,7 @@ public class AuthService {
             user = userStore.findByEmail(email);
         }
         if(user.isEmpty()) {
-            throw new LuthenError(Error.INVALID_CREDENTIALS);
+            throw new LuthenError(Error.INVALID_OR_USER_CREDENTIALS);
         }
         return user.get();
     }

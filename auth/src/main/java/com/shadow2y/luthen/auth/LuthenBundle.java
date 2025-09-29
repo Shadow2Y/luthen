@@ -1,6 +1,6 @@
 package com.shadow2y.luthen.auth;
 
-import com.shadow2y.luthen.api.models.auth.UserAuth;
+import com.shadow2y.luthen.api.response.UserAuth;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.Authenticator;

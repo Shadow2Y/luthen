@@ -4,70 +4,75 @@ import com.shadow2y.luthen.service.repository.tables.User;
 import io.dropwizard.hibernate.AbstractDAO;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.hibernate.SessionFactory;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Singleton
 public class UserStore extends AbstractDAO<User> {
-
-    @PersistenceContext
-    private final EntityManager em;
+    private static final Logger log = Logger.getLogger(UserStore.class.getName());
 
     @Inject
-    public UserStore(EntityManager em, SessionFactory factory) {
-        super(factory);
-        this.em = em;
+    public UserStore(SessionFactory sessionFactory) {
+        super(sessionFactory);
     }
 
     @Transactional
     public User save(User user) {
-        em.persist(user);
+        log.info("Saving user :: " + user);
+        persist(user);
         return user;
     }
 
     public Optional<User> findByUsername(String username) {
-        return em.createNamedQuery("User.findByUsername", User.class)
+        return currentSession()
+                .createNamedQuery("User.findByUsername", User.class)
                 .setParameter("username", username)
                 .getResultStream()
                 .findFirst();
     }
 
     public boolean existsByUsername(String username) {
-        Long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.username = :username", Long.class)
+        Long count = currentSession()
+                .createQuery("SELECT COUNT(u) FROM User u WHERE u.username = :username", Long.class)
                 .setParameter("username", username)
                 .getSingleResult();
         return count > 0;
     }
 
     public Optional<User> findByEmail(String email) {
-        return em.createNamedQuery("User.findByEmail", User.class)
+        return currentSession()
+                .createNamedQuery("User.findByEmail", User.class)
                 .setParameter("email", email)
                 .getResultStream()
                 .findFirst();
     }
 
     public boolean existsByEmail(String emailId) {
-        Long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
+        Long count = currentSession()
+                .createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
                 .setParameter("email", emailId)
                 .getSingleResult();
         return count > 0;
     }
 
+    @Transactional
     public User create(User user) {
-        return persist(user);
+        log.info("Creating user: " + user);
+        currentSession().persist(user);
+        return user;
     }
 
     public User update(User user) {
-        return persist(user);
+        log.info("Updating user: " + user);
+        return currentSession().merge(user);
     }
 
-    @Transactional
     public void delete(User user) {
-        em.remove(em.contains(user) ? user : em.merge(user));
+        log.info("Deleting user: " + user);
+        currentSession().remove(currentSession().contains(user) ? user : currentSession().merge(user));
     }
 
 }
