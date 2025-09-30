@@ -35,3 +35,15 @@ swaggerBundleConfiguration:
 
 jwtSecret: 123
 jwtExpiryMinutes: 10
+
+# RSA Keys for JWT signing/verification
+rsaPrivateKey: ${RSA_PRIVATE_KEY}
+rsaPublicKey: ${RSA_PUBLIC_KEY}
+
+# Logging settings
+logging:
+  level: INFO
+  loggers:
+    com.shadow2y.luthen: DEBUG
+    com.shadow2y.luthen.service.service.LuthenTokenService: DEBUG
+    org.hibernate.SQL: ERROR

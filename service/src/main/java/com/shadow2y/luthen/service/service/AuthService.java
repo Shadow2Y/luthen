@@ -1,5 +1,6 @@
 package com.shadow2y.luthen.service.service;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.shadow2y.luthen.api.request.CreateRoleRequest;
 import com.shadow2y.luthen.api.request.LoginRequest;
 import com.shadow2y.luthen.api.response.LoginResponse;
@@ -89,8 +90,12 @@ public class AuthService {
         return permissionsList;
     }
 
-    public PermissionSummary getOrCreatePermission(String permissionName, String description) {
-        return permissionStore.getOrCreatePermission(permissionName, description).toSummary();
+    public PermissionSummary getOrCreatePermission(String permissionName, String description) throws LuthenError {
+        var permissionOpt = permissionStore.getOrCreatePermission(permissionName, description);
+        if(permissionOpt.isPresent()) {
+            return permissionOpt.get().toSummary();
+        }
+        throw new LuthenError(Error.INTERNAL_DATABASE_ERROR);
     }
 
     public RoleSummary getOrCreateRole(CreateRoleRequest request) throws LuthenError {
@@ -129,6 +134,10 @@ public class AuthService {
         if (userStore.existsByEmail(email)) {
             throw new LuthenError(Error.EMAIL_ALREADY_EXISTS);
         }
+    }
+
+    public JWTClaimsSet decrypt(String token) throws LuthenError {
+        return tokenService.validateGetClaims(token);
     }
 
     public void logout(String token) {
@@ -178,7 +187,7 @@ public class AuthService {
             user = userStore.findByEmail(email);
         }
         if(user.isEmpty()) {
-            throw new LuthenError(Error.INVALID_OR_USER_CREDENTIALS);
+            throw new LuthenError(Error.INVALID_USER_OR_CREDENTIALS);
         }
         return user.get();
     }

@@ -1,5 +1,7 @@
 package com.shadow2y.luthen.service.resource;
 
+import com.codahale.metrics.annotation.Timed;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.shadow2y.luthen.api.request.CreatePermissionRequest;
 import com.shadow2y.luthen.api.request.CreateRoleRequest;
 import com.shadow2y.luthen.api.request.LoginRequest;
@@ -39,6 +41,7 @@ public class AuthResource {
     }
 
     @POST
+    @Timed
     @UnitOfWork
     @Path("/login")
     public LoginResponse login(LoginRequest request) throws LuthenError {
@@ -46,6 +49,7 @@ public class AuthResource {
     }
 
     @POST
+    @Timed
     @Path("/test")
     @RolesAllowed("test")
     public String test() {
@@ -72,6 +76,13 @@ public class AuthResource {
         return Response.ok()
                 .entity(response)
                 .build();
+    }
+
+    @POST
+    @UnitOfWork
+    @Path("/test/decrypt")
+    public JWTClaimsSet decrypt(String token) throws LuthenError {
+        return authService.decrypt(token);
     }
 
 }

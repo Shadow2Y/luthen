@@ -14,15 +14,15 @@ public class PermissionStore extends BaseDAO<Permission> {
         super(sessionFactory);
     }
 
-    public Permission getOrCreatePermission(String name, String description) {
+    public Optional<Permission> getOrCreatePermission(String name, String description) {
         var result = getPermissions(name);
         if(result.isEmpty()) {
             Permission permission = new Permission();
             permission.setName(name);
             permission.setDescription(description);
-            return persist(permission);
+            return Optional.of(persist(permission));
         }
-        return result.get();
+        return result;
     }
 
     public Set<Permission> getPermissions(List<String> permissions) {

@@ -5,7 +5,11 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.*;
 import com.shadow2y.luthen.api.response.UserAuth;
+import com.shadow2y.luthen.service.exception.Error;
+import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.service.service.intf.TokenService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -15,17 +19,19 @@ import java.util.*;
 
 public class LuthenTokenService implements TokenService {
 
+    private static final Logger log = LoggerFactory.getLogger(LuthenTokenService.class);
+
     private final String issuer;
     private final JWSSigner signer;
     private final JWSHeader header;
+    private final JWSVerifier verifier;
     private final long accessMinutes;
-    private final RSAPublicKey publicKey;
 
     public LuthenTokenService(RSAPrivateKey privateKey, RSAPublicKey publicKey, String issuer, long accessMinutes) {
         this.issuer = issuer;
-        this.publicKey = publicKey;
         this.accessMinutes = accessMinutes;
         this.signer = new RSASSASigner(privateKey);
+        this.verifier = new RSASSAVerifier(publicKey);
         this.header = new JWSHeader.Builder(JWSAlgorithm.RS256)
                 .type(JOSEObjectType.JWT)
                 .build();
@@ -34,6 +40,9 @@ public class LuthenTokenService implements TokenService {
     public UserAuth createAccessToken(UserAuth userAuth) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessMinutes * 60);
+
+        log.debug("Creating access token for user: {}", userAuth.getUsername());
+        log.debug("Token expiration: {}", exp);
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .issuer(issuer)
@@ -44,40 +53,24 @@ public class LuthenTokenService implements TokenService {
                 .claim("roles", userAuth.getRoles())
                 .build();
 
+        log.debug("Created claims: {}", claims.toJSONObject());
+
         SignedJWT signedJWT = new SignedJWT(header, claims);
         try {
             signedJWT.sign(signer);
+            userAuth.setAccessToken(signedJWT.serialize()).setCreatedAt(now).setExpiresAt(exp);
+            return userAuth;
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
-        userAuth.setAccessToken(signedJWT.serialize()).setCreatedAt(now).setExpiresAt(exp);
-        return userAuth;
     }
 
     public boolean verifyAccessToken(String token) {
         try {
             validateGetClaims(token);
             return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return false;
-        }
-    }
-
-    private JWTClaimsSet validateGetClaims(String token) {
-        try {
-            SignedJWT signedJWT = SignedJWT.parse(token);
-            JWSVerifier verifier = new RSASSAVerifier(publicKey);
-            if (!signedJWT.verify(verifier)) {
-                throw new SecurityException("Invalid signature");
-            }
-            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
-            Date now = new Date();
-            if (claims.getExpirationTime() == null || claims.getExpirationTime().before(now)) {
-                throw new SecurityException("Token expired");
-            }
-            return claims;
-        } catch (Exception e) {
-            throw new SecurityException(e);
         }
     }
 
@@ -85,15 +78,33 @@ public class LuthenTokenService implements TokenService {
         try {
             if (!verifyAccessToken(token)) return false;
             var claims = validateGetClaims(token);
-            return claims.getBooleanClaim(role);
-        } catch (ParseException e) {
+            List<String> roles = claims.getStringListClaim("roles");
+            return roles != null && roles.contains(role);
+        } catch (Throwable e) {
             return false;
         }
     }
 
-    @Override
-    public String generateToken() {
-        return String.format("%s-%s",UUID.randomUUID(), System.currentTimeMillis());
+    public JWTClaimsSet validateGetClaims(String token) throws LuthenError {
+        try {
+            log.debug("Validating token: {}", token);
+            SignedJWT signedJWT = SignedJWT.parse(token);
+
+            if (!signedJWT.verify(verifier)) {
+                throw new LuthenError(Error.INVALID_TOKEN_SIGNATURE);
+            }
+
+            Date now = new Date();
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+            if (claims.getExpirationTime() == null || claims.getExpirationTime().before(now)) {
+                log.error("Token expired. Expiration: {}, Current time: {}", claims.getExpirationTime(), now);
+                throw new LuthenError(Error.TOKEN_EXPIRED);
+            }
+            return claims;
+        } catch (JOSEException | ParseException e) {
+            log.error("Token validation failed", e);
+            throw new LuthenError(Error.TOKEN_AUTHENTICATION_FAILED, e);
+        }
     }
 
     @Override
@@ -106,8 +117,4 @@ public class LuthenTokenService implements TokenService {
 //        sessionStore.deleteByUserId(userId);
     }
 
-    @Override
-    public void cleanupExpiredTokens() {
-//        sessionStore.deleteExpiredTokens();
-    }
 }

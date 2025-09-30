@@ -27,6 +27,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Base64;
 
 public class App extends Application<AppConfig> {
 
@@ -42,6 +43,7 @@ public class App extends Application<AppConfig> {
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor())
         );
         bootstrap.addBundle(hibernateBundle);
+
         bootstrap.addBundle(new SwaggerBundle<>() {
             @Override protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AppConfig configuration) {
                 return configuration.swaggerBundleConfiguration;
@@ -53,26 +55,25 @@ public class App extends Application<AppConfig> {
     public void run(AppConfig appConfig, Environment environment) {
         var sessionFactory = hibernateBundle.getSessionFactory();
 
-        environment.jersey().register(new LuthenBundle<AppConfig>(null));
+        KeyPair keyPair = validateGenerateKeys(new AppConfig());
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 
-        registerServices(environment, sessionFactory);
+        registerServices(environment, sessionFactory, publicKey, privateKey);
         registerResources(environment);
         registerHealthChecks(environment, sessionFactory);
     }
 
-    public void registerServices(Environment environment, SessionFactory sessionFactory) {
+    public void registerServices(Environment environment, SessionFactory sessionFactory,
+                                  RSAPublicKey publicKey, RSAPrivateKey privateKey) {
         var userStore = new UserStore(sessionFactory);
         var roleStore = new RoleStore(sessionFactory);
         var permissionStore = new PermissionStore(sessionFactory);
         environment.jersey().register(userStore);
 
-        // Generate test RSA key pair for dev/testing
-        KeyPair keyPair = generateTestRsaKeyPair();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-
         var passwordService = new PasswordServiceImpl();
-        var tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", 1L);
+        // Fix parameter order: privateKey first, then publicKey
+        var tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", 10L);
         var authService = new AuthService(tokenService, passwordService, userStore, roleStore, permissionStore);
 
         environment.jersey().register(new AbstractBinder() {
@@ -91,15 +92,64 @@ public class App extends Application<AppConfig> {
         environment.healthChecks().register("database", new DatabaseHealthCheck(sessionFactory));
     }
 
+    /// AUTH Logics
 
-    private static KeyPair generateTestRsaKeyPair() {
+    public KeyPair validateGenerateKeys(AppConfig appConfig) {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(2048);
-            return keyGen.generateKeyPair();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to generate RSA key pair", e);
+            var publicKey = loadPublicKey(appConfig.getRsaPublicKey());
+            var privateKey = loadPrivateKey(appConfig.getRsaPrivateKey());
+            return new KeyPair(publicKey, privateKey);
+        } catch (Exception e) {
+            return generateTestRsaKeyPair();
         }
     }
 
+    private static KeyPair generateTestRsaKeyPair() {
+        KeyPair keyPair;
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(2048);
+            keyPair = keyGen.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Failed to generate RSA key pair", e);
+        }
+        // Generate new keys and print them
+        System.err.println("\n=============== RSA KEYS MISSING OR INVALID ===============");
+        System.err.println("Generating new RSA key pair. Add these to your environment variables:\n");
+
+        var publicKey = (RSAPublicKey) keyPair.getPublic();
+        var privateKey = (RSAPrivateKey) keyPair.getPrivate();
+
+        // Convert keys to Base64
+        String publicKeyBase64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+        String privateKeyBase64 = Base64.getEncoder().encodeToString(privateKey.getEncoded());
+
+        System.err.println("export RSA_PUBLIC_KEY=\"" + publicKeyBase64 + "\"");
+        System.err.println("export RSA_PRIVATE_KEY=\"" + privateKeyBase64 + "\"");
+        System.err.println("\n=======================================================");
+
+        throw new RuntimeException("RSA keys not configured. Generated new keys - see above for values to use.");
+    }
+
+    private RSAPublicKey loadPublicKey(String base64Key) {
+        try {
+            byte[] decoded = java.util.Base64.getDecoder().decode(base64Key);
+            java.security.spec.X509EncodedKeySpec keySpec = new java.security.spec.X509EncodedKeySpec(decoded);
+            java.security.KeyFactory kf = java.security.KeyFactory.getInstance("RSA");
+            return (RSAPublicKey) kf.generatePublic(keySpec);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load RSA public key", e);
+        }
+    }
+
+    private RSAPrivateKey loadPrivateKey(String base64Key) {
+        try {
+            byte[] decoded = java.util.Base64.getDecoder().decode(base64Key);
+            java.security.spec.PKCS8EncodedKeySpec keySpec = new java.security.spec.PKCS8EncodedKeySpec(decoded);
+            java.security.KeyFactory kf = java.security.KeyFactory.getInstance("RSA");
+            return (RSAPrivateKey) kf.generatePrivate(keySpec);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load RSA private key", e);
+        }
+    }
 }
