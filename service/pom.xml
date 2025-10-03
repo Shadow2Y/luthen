@@ -25,7 +25,7 @@
 
         <dependency>
             <groupId>com.shadow2y.luthen</groupId>
-            <artifactId>auth</artifactId>
+            <artifactId>client</artifactId>
             <version>${luthen.version}</version>
         </dependency>
 

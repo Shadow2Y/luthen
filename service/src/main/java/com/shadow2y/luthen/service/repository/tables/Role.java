@@ -10,9 +10,10 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "roles")
-@NamedQueries(
-        @NamedQuery(name ="Role.findByName", query ="SELECT r FROM Role r WHERE r.name IN :names")
-)
+@NamedQueries({
+        @NamedQuery(name = "Role.getAllRoles", query = "SELECT r FROM Role r"),
+        @NamedQuery(name = "Role.findByName", query = "SELECT r FROM Role r WHERE r.name IN :names")
+})
 public class Role {
 
     @Id

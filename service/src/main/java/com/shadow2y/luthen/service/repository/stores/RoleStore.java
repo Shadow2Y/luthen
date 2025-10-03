@@ -37,4 +37,9 @@ public class RoleStore extends BaseDAO<Role> {
                 .getResultList();
     }
 
+    public List<Role> getAllRoles() {
+        return currentSession().createNamedQuery("Role.getAllRoles", Role.class)
+                .getResultList();
+    }
+
 }
