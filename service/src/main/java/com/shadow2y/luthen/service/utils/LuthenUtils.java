@@ -11,7 +11,7 @@ public final class LuthenUtils {
         return before.atZone(defaultZone).isAfter(after.atZone(defaultZone));
     }
 
-    static boolean isEmpty(String o) {
+    public static boolean isEmpty(String o) {
         return o==null || o.isEmpty();
     }
 

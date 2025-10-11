@@ -33,17 +33,25 @@ swaggerBundleConfiguration:
   version: 1.0.0
   description: API for Luthen application
 
-jwtSecret: 123
-jwtExpiryMinutes: 10
+authConfig:
+  jwtExpiryMinutes: 10
+  passwordSaltRounds: 5
+  filterAlgorithm: SHA-512
+  filterSeed: ${CLIENT_FILTER_SEED}
+  filteringWindowMins: 5
+  # RSA Keys for JWT signing/verification
+  rsaPrivateKey: ${RSA_PRIVATE_KEY}
+  rsaPublicKey: ${RSA_PUBLIC_KEY}
 
-# RSA Keys for JWT signing/verification
-rsaPrivateKey: ${RSA_PRIVATE_KEY}
-rsaPublicKey: ${RSA_PUBLIC_KEY}
+clientConfigs:
+   MOVITRAK:
+      id: ${MOVITRAK_CLIENT_ID}
+      secret: ${MOVITRAK_CLIENT_SECRET}
+      refreshInMins: 1
 
 # Logging settings
 logging:
   level: INFO
   loggers:
     com.shadow2y.luthen: DEBUG
-    com.shadow2y.luthen.service.service.LuthenTokenService: DEBUG
-    org.hibernate.SQL: ERROR
+    org.hibernate: ERROR

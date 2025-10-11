@@ -8,7 +8,10 @@ import com.shadow2y.luthen.service.repository.stores.RoleStore;
 import com.shadow2y.luthen.service.repository.stores.UserStore;
 import com.shadow2y.luthen.service.resource.AuthResource;
 import com.shadow2y.luthen.service.resource.HealthResource;
+import com.shadow2y.luthen.service.resource.LuthenClientResource;
+import com.shadow2y.luthen.service.resource.TestResource;
 import com.shadow2y.luthen.service.service.AuthService;
+import com.shadow2y.luthen.service.service.LuthenClientService;
 import com.shadow2y.luthen.service.service.LuthenTokenService;
 import com.shadow2y.luthen.service.service.PasswordServiceImpl;
 import com.shadow2y.luthen.service.utils.CryptoUtils;
@@ -49,8 +52,6 @@ public class App extends Application<AppConfig> {
     @Override
     public void run(AppConfig appConfig, Environment environment) {
 
-        CryptoUtils.init(appConfig.getAuthConfig().getFilterAlgorithm(), appConfig.getAuthConfig().getFilterSeed(), appConfig.getAuthConfig().getFilteringWindowMins());
-
         KeyPair keyPair = CryptoUtils.validateGenerateKeys(appConfig);
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
@@ -59,26 +60,30 @@ public class App extends Application<AppConfig> {
 
         registerResources(environment);
         registerHealthChecks(environment, sessionFactory);
-        registerServices(environment, sessionFactory, publicKey, privateKey);
+        registerServices(appConfig, environment, sessionFactory, publicKey, privateKey);
     }
 
-    public void registerServices(Environment environment, SessionFactory sessionFactory, RSAPublicKey publicKey, RSAPrivateKey privateKey) {
-        var userStore = new UserStore(sessionFactory);
-        var roleStore = new RoleStore(sessionFactory);
-        var permissionStore = new PermissionStore(sessionFactory);
+    public void registerServices(AppConfig appConfig, Environment environment, SessionFactory sessionFactory, RSAPublicKey publicKey, RSAPrivateKey privateKey) {
+        UserStore userStore = new UserStore(sessionFactory);
+        RoleStore roleStore = new RoleStore(sessionFactory);
+        PermissionStore permissionStore = new PermissionStore(sessionFactory);
         environment.jersey().register(userStore);
 
-        var passwordService = new PasswordServiceImpl();
-        var tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", 10L);
-        var authService = new AuthService(tokenService, passwordService, userStore, roleStore, permissionStore);
+        PasswordServiceImpl passwordService = new PasswordServiceImpl(appConfig.getAuthConfig().getPasswordSaltRounds());
+        LuthenTokenService tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", appConfig.getAuthConfig().getJwtExpiryMinutes());
+        AuthService authService = new AuthService(tokenService, passwordService, userStore, roleStore, permissionStore);
+        LuthenClientService clientService = new LuthenClientService(appConfig, roleStore, permissionStore);
 
         environment.jersey().register(authService);
         environment.jersey().register(tokenService);
+        environment.jersey().register(clientService);
     }
 
     public void registerResources(Environment environment) {
         environment.jersey().register(AuthResource.class);
+        environment.jersey().register(LuthenClientResource.class);
         environment.jersey().register(HealthResource.class);
+        environment.jersey().register(TestResource.class);
         environment.jersey().register(new LuthenExceptionMapper());
     }
 

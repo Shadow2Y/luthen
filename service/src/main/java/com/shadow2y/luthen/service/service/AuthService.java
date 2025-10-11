@@ -120,10 +120,11 @@ public class AuthService {
         if (!passwordService.verifyPassword(request.getPassword(), user.getPassword())) {
             throw new LuthenError(Error.INVALID_CREDENTIALS);
         }
-
         if (!UserStatus.ACTIVE.equals(user.getStatus())) {
             throw new LuthenError(Error.ACCOUNT_DEACTIVATED);
         }
+
+        log.debug("Validated user with username :: {}", user.getUsername());
     }
 
     private void validateNewUser(String username, String email) throws LuthenError {
@@ -181,14 +182,15 @@ public class AuthService {
 
     public User getUser(String username, String email) throws LuthenError {
         Optional<User> user = Optional.empty();
-        if(!StringUtils.isEmpty(username)) {
-            user = userStore.findByUsername(username);
-        } else if(!StringUtils.isEmpty(email)) {
+        if(!StringUtils.isEmpty(email)) {
             user = userStore.findByEmail(email);
+        } else if(!StringUtils.isEmpty(username)) {
+            user = userStore.findByUsername(username);
         }
         if(user.isEmpty()) {
             throw new LuthenError(Error.INVALID_USER_OR_CREDENTIALS);
         }
+        log.info("Fetched user :: {} from DB", username);
         return user.get();
     }
 

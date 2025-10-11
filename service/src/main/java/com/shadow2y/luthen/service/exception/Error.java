@@ -30,6 +30,7 @@ public enum Error {
     INTERNAL_DATABASE_ERROR(500, "Internal Database Error"),
     TOKEN_AUTHENTICATION_FAILED(500, "Token Authentication Failed"),
     CLIENT_VALIDATION_FAILED(500, "Client Validation Failed"),
+    CLIENT_FILTER_VALIDATION_FAILED(500, "Client Filter Validation Failed"),
     ;
 
     @Getter

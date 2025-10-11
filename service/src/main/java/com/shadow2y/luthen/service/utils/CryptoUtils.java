@@ -1,6 +1,5 @@
 package com.shadow2y.luthen.service.utils;
 
-
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -16,35 +15,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CryptoUtils {
-
-    private static String seed;
-    private static long windowSeconds;
-    private static MessageDigest digest;
-
-    public void init(String algorithm, String seed, long windowSeconds) {
-        CryptoUtils.seed = seed;
-        CryptoUtils.windowSeconds = windowSeconds;
-        try {
-            digest = MessageDigest.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public String generate() {
-        long currentWindow = Instant.now().getEpochSecond() / windowSeconds;
-        String input = seed + ":" + currentWindow;
-        return hashString(input);
-    }
-
-    private String hashString(String input) {
-        byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(hash).substring(0, 16);
-    }
-
-    public boolean verify(String candidate) {
-        return candidate.equals(generate());
-    }
 
     public static KeyPair validateGenerateKeys(AppConfig appConfig) {
         try {

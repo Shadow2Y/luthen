@@ -41,8 +41,7 @@ public class LuthenTokenService implements TokenService {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessMinutes * 60);
 
-        log.debug("Creating access token for user: {}", userAuth.getUsername());
-        log.debug("Token expiration: {}", exp);
+        log.info("Creating access token for user :: {}", userAuth.getUsername());
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .issuer(issuer)
@@ -59,6 +58,7 @@ public class LuthenTokenService implements TokenService {
         try {
             signedJWT.sign(signer);
             userAuth.setAccessToken(signedJWT.serialize()).setCreatedAt(now).setExpiresAt(exp);
+            log.info("Created access token for user :: {}, with expiration :: {}", userAuth.getUsername(), exp);
             return userAuth;
         } catch (JOSEException e) {
             throw new RuntimeException(e);

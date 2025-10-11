@@ -11,6 +11,7 @@ import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.service.service.AuthService;
 import io.dropwizard.hibernate.UnitOfWork;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -19,12 +20,19 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Instant;
 
 
 @Path("/auth")
+@Tag(name = "AUTH")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AuthResource {
+
+    private final Logger log = LoggerFactory.getLogger(AuthResource.class);
 
     AuthService authService;
 
@@ -34,6 +42,7 @@ public class AuthResource {
     }
 
     @POST
+    @Timed
     @UnitOfWork
     @Path("/signup")
     public UserSummary signup(SignupRequest request) throws LuthenError {
@@ -45,7 +54,10 @@ public class AuthResource {
     @UnitOfWork
     @Path("/login")
     public LoginResponse login(LoginRequest request) throws LuthenError {
-        return authService.login(request);
+        log.info("Received `/login` request");
+        var response = authService.login(request);
+        log.info("Responding to `/login` request");
+        return response;
     }
 
     @POST

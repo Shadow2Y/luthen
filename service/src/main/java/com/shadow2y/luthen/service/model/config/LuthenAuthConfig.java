@@ -10,6 +10,9 @@ public class LuthenAuthConfig {
 
     private int jwtExpiryMinutes; /// TODO Implementation
 
+    @Valid @NotNull
+    private int passwordSaltRounds;
+
     @NotEmpty
     private String rsaPrivateKey;
 

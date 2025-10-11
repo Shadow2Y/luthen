@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,9 +19,9 @@ import java.util.List;
 @Table(name = "users")
 @NamedQueries({
         @NamedQuery(name = "User.findAll", query = "SELECT u FROM User u"),
-        @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email LIKE :email"),
+        @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
         @NamedQuery(name = "User.findByStatus", query = "SELECT u FROM User u WHERE u.status = :status"),
-        @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username LIKE :username")
+        @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username")
 })
 @NoArgsConstructor
 public class User {
@@ -34,6 +35,7 @@ public class User {
     private String username;
 
     @Setter
+    @UniqueElements
     @Column(name = "email", nullable = false)
     private String email;
 
