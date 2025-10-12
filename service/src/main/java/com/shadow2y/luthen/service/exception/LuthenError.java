@@ -14,4 +14,9 @@ public class LuthenError extends Throwable {
         this.error = error;
     }
 
+    public LuthenError(Error error, String detailedMessage, Throwable cause) {
+        super(error.getReason() +"\n"+detailedMessage, cause);
+        this.error = error;
+    }
+
 }

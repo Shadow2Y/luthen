@@ -1,5 +1,6 @@
 package com.shadow2y.luthen.service;
 
+import com.shadow2y.luthen.service.model.config.IdentityConfig;
 import com.shadow2y.luthen.service.model.config.LuthenAuthConfig;
 import com.shadow2y.luthen.service.model.config.LuthenClientConfig;
 import com.shadow2y.luthen.service.model.config.LuthenClient;
@@ -8,26 +9,27 @@ import io.dropwizard.db.DataSourceFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
-@Data
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AppConfig extends Configuration {
 
     @Valid @NotNull
-    private DataSourceFactory database;
+    public final DataSourceFactory database;
 
     @Valid @NotNull
-    private LuthenAuthConfig authConfig;
+    public LuthenAuthConfig authConfig;
+
+    @Valid @NotNull
+    public IdentityConfig identityConfig;
 
     @Valid
-    private Map<LuthenClient,LuthenClientConfig> clientConfigs;
+    public Map<LuthenClient,LuthenClientConfig> clientConfigs;
 
     public SwaggerBundleConfiguration swaggerBundleConfiguration;
 
-    public AppConfig() {
-    }
 }

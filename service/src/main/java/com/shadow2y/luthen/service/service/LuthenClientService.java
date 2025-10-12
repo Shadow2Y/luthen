@@ -22,7 +22,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,7 +39,7 @@ public class LuthenClientService {
         this.appConfig = appConfig;
         this.roleStore = roleStore;
         this.permissionStore = permissionStore;
-        ClientFilter.init(appConfig.getAuthConfig().getFilterAlgorithm(), appConfig.getAuthConfig().getFilterSeed(), appConfig.getAuthConfig().getFilteringWindowMins());
+        ClientFilter.init(appConfig.authConfig.getFilterAlgorithm(), appConfig.authConfig.getFilterSeed(), appConfig.authConfig.getFilteringWindowMins());
     }
 
     public ClientRefreshResponse getAuthData(String filterKey, ClientRefreshRequest request) throws LuthenError {
@@ -94,7 +93,7 @@ public class LuthenClientService {
     public LuthenClientConfig getClientConfig(String clientName) throws LuthenError {
         try {
             LuthenClient client = LuthenClient.valueOf(clientName);
-            return appConfig.getClientConfigs().get(client);
+            return appConfig.clientConfigs.get(client);
         } catch (Throwable e) {
             log.error("Client Validation Failed, ERROR :: ",e);
             throw new LuthenError(Error.CLIENT_VALIDATION_FAILED);
@@ -116,6 +115,7 @@ public class LuthenClientService {
         private static final Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
 
         void init(String algorithm, String seed, long windowMins) {
+            if(seed!=null && digest!=null) return;
             ClientFilter.seed = seed;
             ClientFilter.windowMins = windowMins;
             try {

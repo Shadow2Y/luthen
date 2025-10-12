@@ -16,7 +16,7 @@ public class SessionFactoryManager {
             var configuration = new org.hibernate.cfg.Configuration();
 
             // Database connection settings
-            var dataSourceFactory = config.getDatabase();
+            var dataSourceFactory = config.database;
             configuration.setProperty("hibernate.connection.driver_class", dataSourceFactory.getDriverClass());
             configuration.setProperty("hibernate.connection.url", dataSourceFactory.getUrl());
             configuration.setProperty("hibernate.connection.username", dataSourceFactory.getUser());

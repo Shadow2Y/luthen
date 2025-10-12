@@ -19,7 +19,7 @@ public class LuthenHibernateBundle extends HibernateBundle<AppConfig> {
 
     @Override
     public DataSourceFactory getDataSourceFactory(AppConfig configuration) {
-        return configuration.getDatabase();
+        return configuration.database;
     }
 
 }

@@ -48,14 +48,12 @@ public class AuthService {
         String username = signupRequest.getUsername();
         String email = signupRequest.getEmail();
         String password = signupRequest.getPassword();
-
         validateNewUser(username, email);
 
         String hashedPassword = passwordService.hashPassword(password);
-        User user = new User(username, email, hashedPassword);
 
+        User user = userStore.save(username, email, hashedPassword);
         log.info("User registered successfully: {}", username);
-        user = userStore.save(user);
         return user.toSummary();
     }
 
@@ -178,7 +176,6 @@ public class AuthService {
         // Invalidate all existing sessions for security
         tokenService.invalidateAllUserTokens(username);
     }
-
 
     public User getUser(String username, String email) throws LuthenError {
         Optional<User> user = Optional.empty();

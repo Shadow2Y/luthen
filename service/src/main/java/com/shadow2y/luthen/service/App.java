@@ -3,6 +3,8 @@ package com.shadow2y.luthen.service;
 import com.shadow2y.luthen.service.exception.mapper.LuthenExceptionMapper;
 import com.shadow2y.luthen.service.health.DatabaseHealthCheck;
 import com.shadow2y.luthen.service.repository.common.LuthenHibernateBundle;
+import com.shadow2y.luthen.service.repository.common.ValkeyFactory;
+import com.shadow2y.luthen.service.repository.stores.OTPStore;
 import com.shadow2y.luthen.service.repository.stores.PermissionStore;
 import com.shadow2y.luthen.service.repository.stores.RoleStore;
 import com.shadow2y.luthen.service.repository.stores.UserStore;
@@ -23,6 +25,7 @@ import io.dropwizard.core.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.hibernate.SessionFactory;
+import redis.clients.jedis.JedisPool;
 
 import java.security.KeyPair;
 import java.security.interfaces.RSAPrivateKey;
@@ -68,9 +71,15 @@ public class App extends Application<AppConfig> {
         RoleStore roleStore = new RoleStore(sessionFactory);
         PermissionStore permissionStore = new PermissionStore(sessionFactory);
         environment.jersey().register(userStore);
+        environment.jersey().register(roleStore);
+        environment.jersey().register(permissionStore);
 
-        PasswordServiceImpl passwordService = new PasswordServiceImpl(appConfig.getAuthConfig().getPasswordSaltRounds());
-        LuthenTokenService tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", appConfig.getAuthConfig().getJwtExpiryMinutes());
+        JedisPool jedisPool = ValkeyFactory.build(appConfig.identityConfig.valkeyConfig);
+        OTPStore otpStore = new OTPStore(jedisPool);
+        environment.jersey().register(otpStore);
+
+        PasswordServiceImpl passwordService = new PasswordServiceImpl(appConfig.authConfig.getPasswordSaltRounds());
+        LuthenTokenService tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", appConfig.authConfig.getJwtExpiryMinutes());
         AuthService authService = new AuthService(tokenService, passwordService, userStore, roleStore, permissionStore);
         LuthenClientService clientService = new LuthenClientService(appConfig, roleStore, permissionStore);
 

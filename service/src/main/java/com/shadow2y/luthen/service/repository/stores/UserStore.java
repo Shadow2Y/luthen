@@ -26,6 +26,11 @@ public class UserStore extends AbstractDAO<User> {
         return user;
     }
 
+    public User save(String username, String email, String hashedPassword) {
+        User user = new User(username,email,hashedPassword);
+        return save(user);
+    }
+
     public Optional<User> findByUsername(String username) {
         return currentSession()
                 .createNamedQuery("User.findByUsername", User.class)
@@ -56,13 +61,6 @@ public class UserStore extends AbstractDAO<User> {
                 .setParameter("email", emailId)
                 .getSingleResult();
         return count > 0;
-    }
-
-    @Transactional
-    public User create(User user) {
-        log.info("Creating user: " + user);
-        currentSession().persist(user);
-        return user;
     }
 
     public User update(User user) {

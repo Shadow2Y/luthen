@@ -31,6 +31,8 @@ public enum Error {
     TOKEN_AUTHENTICATION_FAILED(500, "Token Authentication Failed"),
     CLIENT_VALIDATION_FAILED(500, "Client Validation Failed"),
     CLIENT_FILTER_VALIDATION_FAILED(500, "Client Filter Validation Failed"),
+    SIGNUP_MAIL_FAILED(500, "Error occurred while attempting Signup flow"),
+    OTP_VALIDATION_FAILED(500, "Unable to validate OTP"),
     ;
 
     @Getter

@@ -1,13 +1,10 @@
 package com.shadow2y.luthen.service.utils;
 
-import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.time.Instant;
 import java.util.Base64;
 
 import com.shadow2y.luthen.service.AppConfig;
@@ -18,8 +15,8 @@ public class CryptoUtils {
 
     public static KeyPair validateGenerateKeys(AppConfig appConfig) {
         try {
-            var publicKey = loadPublicKey(appConfig.getAuthConfig().getRsaPublicKey());
-            var privateKey = loadPrivateKey(appConfig.getAuthConfig().getRsaPrivateKey());
+            var publicKey = loadPublicKey(appConfig.authConfig.getRsaPublicKey());
+            var privateKey = loadPrivateKey(appConfig.authConfig.getRsaPrivateKey());
             return new KeyPair(publicKey, privateKey);
         } catch (Exception e) {
             return generateTestRsaKeyPair();

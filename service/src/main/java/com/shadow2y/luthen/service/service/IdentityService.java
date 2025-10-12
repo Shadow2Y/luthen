@@ -1,55 +1,101 @@
 package com.shadow2y.luthen.service.service;
 
-import com.shadow2y.luthen.service.AppConfig;
+import com.shadow2y.luthen.service.exception.Error;
+import com.shadow2y.luthen.service.exception.LuthenError;
+import com.shadow2y.luthen.service.model.config.IdentityConfig;
+import com.shadow2y.luthen.service.repository.stores.OTPStore;
+import com.shadow2y.luthen.service.utils.LuthenUtils;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.Properties;
 
 @Singleton
 public class IdentityService {
 
+    private static final Logger log = LoggerFactory.getLogger(IdentityService.class);
+
+    final int otpLen;
+    final String host;
+    final String emailId;
+    final String password;
+    final Session session;
+    final Properties properties;
+    final OTPStore otpStore;
+
     @Inject
-    public IdentityService(AppConfig appConfig) {
+    public IdentityService(IdentityConfig identityConfig, OTPStore otpStore) {
+        host = identityConfig.smtpHost;
+        emailId = identityConfig.emailId;
+        password = identityConfig.emailPassword;
 
-    }
-
-    public static void main(String[] args) {
-        String host = "smtp.gmail.com";
-        final String username = "";
-        final String password = "";
-        String to = "";
 
         // Set SMTP properties
-        Properties props = new Properties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", host);
-        props.put("mail.smtp.port", "587");
+        properties = identityConfig.emailProperties;
+        properties.put("mail.smtp.host", host);
 
         // Create session
-        Session session = Session.getInstance(props,
+        session = getSession(properties, emailId, password);
+
+        this.otpStore = otpStore;
+        otpLen = identityConfig.OTPLength;
+    }
+
+    private Session getSession(Properties properties, String emailId, String password) {
+        return Session.getInstance(properties,
                 new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
+                        return new PasswordAuthentication(emailId, password);
                     }
                 });
+    }
 
+    public void initiateSignUp(String to) throws LuthenError {
         try {
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(username));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
-            message.setSubject("Luthen - Your OTP for SignUp");
-            message.setText("Hello, this is a test email sent from Luthen!");
+            String otp = generateOTP();
+            Message message = getNewSignupMail(to, otp);
 
+            otpStore.save(to, otp);
+            log.info("Successfully saved OTP to store :: {}",to);
             Transport.send(message);
-            System.out.println("Email sent successfully!");
+            log.info("Signup Email is sent successfully to :: {}",to);
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.info("Unable to send mail");
+            throw new LuthenError(Error.SIGNUP_MAIL_FAILED, e);
+        } catch (Exception e) {
+            throw new LuthenError(Error.INTERNAL_SERVER_ERROR, e);
         }
     }
 
+    public boolean validateSignupOtp(String emailId, String otp) throws LuthenError {
+        try {
+            String storedOtp = otpStore.getOtp(emailId);
+            return Objects.equals(otp,storedOtp);
+        } catch (Exception e) {
+            log.error("Error occurred while validating OTP for email :: {}, expected OTP :: {}",emailId, otp);
+            throw new LuthenError(Error.OTP_VALIDATION_FAILED,e);
+        }
+    }
+
+    private Message getNewSignupMail(String to, String otp) throws MessagingException {
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(emailId));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+        message.setSubject("Luthen - Your OTP for SignUp");
+        message.setText("Your OTP for verification is - "+otp);
+        return message;
+    }
+
+
+    public String generateOTP() {
+        return LuthenUtils.generateRandomDigits(otpLen);
+    }
+
 }
+

@@ -33,6 +33,24 @@ swaggerBundleConfiguration:
   version: 1.0.0
   description: API for Luthen application
 
+identityConfig:
+  smtpHost: smtp.gmail.com
+  emailId: ${LUTHEN_EMAIL_ID}
+  emailPassword: ${LUTHEN_EMAIL_PASSWORD}
+  emailProperties:
+    "mail.smtp.auth":
+      "true"
+    "mail.smtp.starttls.enable":
+      "true"
+    "mail.smtp.port":
+      "587"
+  valkeyConfig:
+    host: ${IDENTITY_DB_HOST}
+    port: ${IDENTITY_DB_PORT}
+    password: ${IDENTITY_DB_PASSWORD}
+    timeout: 300
+    database: 0
+
 authConfig:
   jwtExpiryMinutes: 10
   passwordSaltRounds: 5

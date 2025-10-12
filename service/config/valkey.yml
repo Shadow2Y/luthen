@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  postgres:
+    image: docker.io/valkey/valkey:8.1.4
+    container_name: valkey
+    ports:
+      - "<VALKEY_PORT>:6379"
+
