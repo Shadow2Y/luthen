@@ -38,6 +38,17 @@ swaggerBundleConfiguration:
   title: Luthen API
   version: 1.0.0
   description: API for Luthen application
+  schemes:
+    - http
+    - https
+  securityDefinitions:
+    bearerAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: JWT Bearer token
+    security:
+      - bearerAuth: [ ]
 
 identityConfig:
   smtpHost: smtp.gmail.com
@@ -65,7 +76,7 @@ authConfig:
   filterAlgorithm: SHA-512
   filterSeed: ${CLIENT_FILTER_SEED}
   filteringWindowMins: 5
-  # RSA Keys for JWT signing/verification
+  issuer: luthen
   rsaPrivateKey: ${RSA_PRIVATE_KEY}
   rsaPublicKey: ${RSA_PUBLIC_KEY}
 

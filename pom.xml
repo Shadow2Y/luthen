@@ -40,7 +40,13 @@
     </properties>
 
     <dependencies>
-        <!-- Lombok for boilerplate code reduction -->
+
+        <dependency>
+            <groupId>com.shadow2y</groupId>
+            <artifactId>commons</artifactId>
+            <version>1.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

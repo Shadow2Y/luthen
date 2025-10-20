@@ -1,8 +1,8 @@
 package com.shadow2y.luthen.service.utils;
 
+import com.shadow2y.commons.Result;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
-import com.shadow2y.luthen.service.model.Result;
 import jakarta.mail.internet.InternetAddress;
 import lombok.experimental.UtilityClass;
 

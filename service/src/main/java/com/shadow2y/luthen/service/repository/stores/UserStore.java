@@ -1,6 +1,6 @@
 package com.shadow2y.luthen.service.repository.stores;
 
-import com.shadow2y.luthen.service.model.Result;
+import com.shadow2y.commons.Result;
 import com.shadow2y.luthen.service.repository.tables.User;
 import io.dropwizard.hibernate.AbstractDAO;
 import jakarta.inject.Inject;

@@ -3,6 +3,8 @@ package com.shadow2y.luthen.auth.models;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import java.security.Principal;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class JWTWrap implements Principal {
@@ -13,7 +15,7 @@ public class JWTWrap implements Principal {
     @SuppressWarnings("unchecked")
     public JWTWrap(JWTClaimsSet claimsSet) {
         this.jwt = claimsSet;
-        this.roles = (Set<String>)claimsSet.getClaims().get("roles");
+        this.roles = new HashSet<>((List<String>) claimsSet.getClaims().get("roles")); /// TODO BitSet implementation after bundle client
     }
 
     @Override

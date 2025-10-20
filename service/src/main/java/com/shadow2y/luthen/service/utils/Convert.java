@@ -1,11 +1,13 @@
 package com.shadow2y.luthen.service.utils;
 
 import jakarta.inject.Singleton;
+import lombok.experimental.UtilityClass;
 
 import java.util.Base64;
 import java.util.BitSet;
 
 @Singleton
+@UtilityClass
 public class Convert {
 
     public static final Base64.Encoder encoder = Base64.getEncoder();

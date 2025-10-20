@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.service.model.config;
+package com.shadow2y.luthen.auth.models;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

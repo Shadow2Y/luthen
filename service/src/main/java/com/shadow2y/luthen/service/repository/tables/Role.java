@@ -5,14 +5,16 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 @Entity
 @Table(name = "roles")
 @NamedQueries({
         @NamedQuery(name = "Role.getAllRoles", query = "SELECT r FROM Role r"),
-        @NamedQuery(name = "Role.findByName", query = "SELECT r FROM Role r WHERE r.name IN :names")
+        @NamedQuery(name = "Role.findByName", query = "SELECT r FROM Role r WHERE r.name IN :names"),
+        @NamedQuery(name = "Role.findByNameExact", query = "SELECT r FROM Role r WHERE r.name = :name")
 })
 public class Role {
 
@@ -30,9 +32,19 @@ public class Role {
     @JoinTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private Set<Permission> permissions;
 
-    public RoleSummary toSummary() {
-        var permissionSummaries = permissions.stream().map(Permission::toSummary).toList();
-        return new RoleSummary(name, description, permissionSummaries);
+    @Transient
+    private RoleSummary summary;
+
+    public RoleSummary getSummary() {
+        if(summary!=null) return summary;
+
+        var permissionSummaries = permissions.stream().map(Permission::getName).collect(Collectors.toSet());
+        this.summary = new RoleSummary(name, description, permissionSummaries);
+        return summary;
+    }
+
+    public Set<String> getPermissions() {
+        return getSummary().permissions();
     }
 
 }

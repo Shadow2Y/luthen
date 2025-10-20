@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.service.model.luthenclient;
+package com.shadow2y.luthen.api.contracts;
 
 import lombok.Data;
 
@@ -8,7 +8,8 @@ import java.util.Set;
 
 @Data
 public class ClientRefreshResponse {
+    String versionId;
     Instant expiryTime;
-    Set<String> blackListedTokens;
+    Set<String> blacklistedUsers;
     Map<String, Set<String>> roleList;
 }

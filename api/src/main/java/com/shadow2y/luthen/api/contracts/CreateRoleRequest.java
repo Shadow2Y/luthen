@@ -1,10 +1,10 @@
 package com.shadow2y.luthen.api.contracts;
 
-import java.util.List;
+import java.util.Set;
 
 public record CreateRoleRequest(
         String name,
         String description,
-        List<String> permissions
+        Set<String> permissions
 ) {
 }

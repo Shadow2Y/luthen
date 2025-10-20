@@ -1,5 +1,6 @@
 package com.shadow2y.luthen.service.service;
 
+import com.shadow2y.commons.Async;
 import com.shadow2y.luthen.api.contracts.SignupInitRequest;
 import com.shadow2y.luthen.api.contracts.SignupInitResponse;
 import com.shadow2y.luthen.api.contracts.SignupVerifyRequest;
@@ -7,8 +8,6 @@ import com.shadow2y.luthen.api.contracts.SignupVerifyResponse;
 import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
-import com.shadow2y.luthen.service.model.Async;
-import com.shadow2y.luthen.service.model.Result;
 import com.shadow2y.luthen.service.model.config.IdentityConfig;
 import com.shadow2y.luthen.service.repository.stores.OTPStore;
 import com.shadow2y.luthen.service.repository.stores.UserStore;

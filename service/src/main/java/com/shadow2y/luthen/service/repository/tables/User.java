@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,20 +58,29 @@ public class User {
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles;
 
+    @Transient
+    private List<String> roleNames;
+
+    @Transient
+    private UserSummary userSummary;
+
     public User(String username, String email, String password) {
         this.email = email;
         this.username = username;
         this.password = password;
-        this.status = UserStatus.ACTIVE;
+        this.status = UserStatus.INACTIVE;
     }
 
     public List<String> getRoleNames() {
-        return roles.stream().map(Role::getName).toList();
+        if(this.roleNames != null) return roleNames;
+        this.roleNames = roles.stream().map(Role::getName).toList();
+        return roleNames;
     }
 
     public UserSummary toSummary() {
-        var roleSummaries = roles.stream().map(Role::toSummary).toList();
-        return new UserSummary(username, email, status, roleSummaries, created_at);
+        if(userSummary!=null) return userSummary;
+        this.userSummary = new UserSummary(username, email, status, getRoleNames(), created_at);
+        return userSummary;
     }
 
 }

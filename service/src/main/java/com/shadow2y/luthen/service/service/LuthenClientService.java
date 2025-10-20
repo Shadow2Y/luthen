@@ -4,12 +4,11 @@ import com.shadow2y.luthen.service.AppConfig;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.service.model.config.LuthenClient;
-import com.shadow2y.luthen.service.model.config.LuthenClientConfig;
-import com.shadow2y.luthen.service.model.luthenclient.ClientRefreshRequest;
-import com.shadow2y.luthen.service.model.luthenclient.ClientRefreshResponse;
+import com.shadow2y.luthen.auth.models.LuthenClientConfig;
+import com.shadow2y.luthen.api.contracts.ClientRefreshRequest;
+import com.shadow2y.luthen.api.contracts.ClientRefreshResponse;
 import com.shadow2y.luthen.service.repository.stores.PermissionStore;
 import com.shadow2y.luthen.service.repository.stores.RoleStore;
-import com.shadow2y.luthen.service.repository.tables.Permission;
 import com.shadow2y.luthen.service.repository.tables.Role;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -61,18 +60,16 @@ public class LuthenClientService {
     private ClientRefreshResponse toRefreshResponse(Instant expiryTime, List<String> invalidatedTokens, List<Role> roles) {
         var response = new ClientRefreshResponse();
         response.setExpiryTime(expiryTime);
-        response.setBlackListedTokens(new HashSet<>(invalidatedTokens));
+        response.setBlacklistedUsers(new HashSet<>(invalidatedTokens));
         response.setRoleList(getRolesAsMap(roles));
         return response;
     }
 
     private Map<String, Set<String>> getRolesAsMap(List<Role> roles) {
-        return roles.stream()
-                .collect(Collectors.toMap(
-                        Role::getName,
-                        role -> role.getPermissions().stream()
-                                .map(Permission::getName)
-                                .collect(Collectors.toSet())
+        return roles.stream().collect(
+                Collectors.toMap(
+                    Role::getName,
+                    Role::getPermissions
                 ));
     }
 

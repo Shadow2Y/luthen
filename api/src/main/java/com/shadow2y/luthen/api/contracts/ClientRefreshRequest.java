@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.service.model.luthenclient;
+package com.shadow2y.luthen.api.contracts;
 
 import lombok.Data;
 

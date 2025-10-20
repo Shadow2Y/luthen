@@ -7,16 +7,15 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 
-import com.shadow2y.luthen.service.AppConfig;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CryptoUtils {
 
-    public static KeyPair validateGenerateKeys(AppConfig appConfig) {
+    public static KeyPair validateGenerateKeys(String publicKeyString, String privateKeyString) {
         try {
-            var publicKey = loadPublicKey(appConfig.authConfig.getRsaPublicKey());
-            var privateKey = loadPrivateKey(appConfig.authConfig.getRsaPrivateKey());
+            var publicKey = loadPublicKey(publicKeyString);
+            var privateKey = loadPrivateKey(privateKeyString);
             return new KeyPair(publicKey, privateKey);
         } catch (Exception e) {
             return generateTestRsaKeyPair();

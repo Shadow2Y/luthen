@@ -1,29 +1,20 @@
 package com.shadow2y.luthen.auth;
 
-import com.shadow2y.luthen.api.models.UserAuth;
+import com.shadow2y.luthen.auth.models.LuthenBundleConfig;
 import com.shadow2y.luthen.auth.models.JWTWrap;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter;
-import io.dropwizard.core.Configuration;
 import io.dropwizard.core.ConfiguredBundle;
 import io.dropwizard.core.setup.Environment;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
-import java.security.interfaces.RSAPublicKey;
-
-public class LuthenBundle<T extends Configuration> implements ConfiguredBundle<T> {
-
-    private final RSAPublicKey publicKey;
-
-    public LuthenBundle(RSAPublicKey publicKey) {
-        this.publicKey = publicKey;
-    }
+public class LuthenBundle<T extends LuthenBundleConfig> implements ConfiguredBundle<T> {
 
     @Override
     public void run(T config, Environment env) {
-        Authenticator<String, JWTWrap> authenticator = new com.shadow2y.luthen.auth.Authenticator(publicKey,"luthen");
+        Authenticator<String, JWTWrap> authenticator = new LuthenAuthenticator(config.getPublicKey(), config.getIssuer());
         RoleAuthorizer authorizer = new RoleAuthorizer();
 
         OAuthCredentialAuthFilter<JWTWrap> filter =
@@ -31,10 +22,11 @@ public class LuthenBundle<T extends Configuration> implements ConfiguredBundle<T
                         .setAuthenticator(authenticator)
                         .setAuthorizer(authorizer)
                         .setPrefix("Bearer")
+                        .setRealm("realm") // <== important!
                         .buildAuthFilter();
 
         env.jersey().register(new AuthDynamicFeature(filter));
-        env.jersey().register(new AuthValueFactoryProvider.Binder<>(UserAuth.class));
+        env.jersey().register(new AuthValueFactoryProvider.Binder<>(JWTWrap.class));
         env.jersey().register(RolesAllowedDynamicFeature.class);
     }
 }

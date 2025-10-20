@@ -1,7 +1,8 @@
 package com.shadow2y.luthen.service;
 
+import com.shadow2y.commons.executor.AsyncExecutorManager;
+import com.shadow2y.luthen.auth.LuthenBundle;
 import com.shadow2y.luthen.service.exception.LuthenExceptionMapper;
-import com.shadow2y.luthen.service.general.AsyncExecutorManager;
 import com.shadow2y.luthen.service.health.DatabaseHealthCheck;
 import com.shadow2y.luthen.service.repository.common.LuthenHibernateBundle;
 import com.shadow2y.luthen.service.repository.common.ValkeyFactory;
@@ -13,7 +14,6 @@ import com.shadow2y.luthen.service.resource.*;
 import com.shadow2y.luthen.service.service.*;
 import com.shadow2y.luthen.service.service.intf.PasswordService;
 import com.shadow2y.luthen.service.service.intf.TokenService;
-import com.shadow2y.luthen.service.utils.CryptoUtils;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.core.Application;
@@ -24,9 +24,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import jakarta.mail.internet.AddressException;
 import org.hibernate.SessionFactory;
 
-import java.security.KeyPair;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 
 public class App extends Application<AppConfig> {
 
@@ -39,6 +36,7 @@ public class App extends Application<AppConfig> {
     @Override
     public void initialize(Bootstrap<AppConfig> bootstrap) {
         bootstrap.addBundle(hibernateBundle);
+        bootstrap.addBundle(new LuthenBundle<>());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor())
         );
@@ -51,16 +49,12 @@ public class App extends Application<AppConfig> {
     @Override
     public void run(AppConfig config, Environment env) throws AddressException {
 
-        KeyPair keyPair = CryptoUtils.validateGenerateKeys(config);
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-
         var sessionFactory = hibernateBundle.getSessionFactory();
 
         setManaged(config, env);
         registerResources(env);
         registerHealthChecks(env, sessionFactory);
-        registerServices(config, env, sessionFactory, publicKey, privateKey);
+        registerServices(config, env, sessionFactory);
     }
 
     public void setManaged(AppConfig config, Environment env) {
@@ -68,11 +62,11 @@ public class App extends Application<AppConfig> {
         env.lifecycle().manage(executorManager);
     }
 
-    public void registerServices(AppConfig appConfig, Environment environment, SessionFactory sessionFactory, RSAPublicKey publicKey, RSAPrivateKey privateKey) throws AddressException {
+    public void registerServices(AppConfig appConfig, Environment environment, SessionFactory sessionFactory) throws AddressException {
         /* STORES */
         UserStore userStore = new UserStore(sessionFactory);
-        RoleStore roleStore = new RoleStore(sessionFactory);
         PermissionStore permissionStore = new PermissionStore(sessionFactory);
+        RoleStore roleStore = new RoleStore(permissionStore,sessionFactory);
         OTPStore otpStore = new OTPStore(ValkeyFactory.build(appConfig.identityConfig.valkeyConfig), appConfig.identityConfig.valkeyConfig.expiryInSeconds);
 
         environment.jersey().register(userStore);
@@ -81,8 +75,8 @@ public class App extends Application<AppConfig> {
         environment.jersey().register(otpStore);
 
         /* SERVICE */
+        TokenService tokenService = new LuthenTokenService(appConfig);
         PasswordService passwordService = new PasswordServiceImpl(appConfig.authConfig.getPasswordSaltRounds());
-        TokenService tokenService = new LuthenTokenService(privateKey, publicKey, "luthen", appConfig.authConfig.getJwtExpiryMinutes());
 
         LuthenClientService clientService = new LuthenClientService(appConfig, roleStore, permissionStore);
         AuthService authService = new AuthService(tokenService, passwordService, userStore, roleStore, permissionStore);

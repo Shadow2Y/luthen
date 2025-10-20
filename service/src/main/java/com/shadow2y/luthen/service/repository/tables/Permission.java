@@ -1,6 +1,5 @@
 package com.shadow2y.luthen.service.repository.tables;
 
-import com.shadow2y.luthen.api.summary.PermissionSummary;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,8 +19,20 @@ public class Permission {
 
     private String description;
 
-    public PermissionSummary toSummary() {
-        return new PermissionSummary(name, description);
+    public Permission(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Permission other)) return false;
+        return name.equals(other.name);
     }
 
 }

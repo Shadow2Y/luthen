@@ -4,32 +4,32 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.shadow2y.luthen.api.models.UserAuth;
 import com.shadow2y.luthen.auth.models.JWTWrap;
-import org.apache.commons.lang3.BitField;
+import io.dropwizard.auth.Authenticator;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.interfaces.RSAPublicKey;
-import java.util.BitSet;
 import java.util.Date;
 import java.util.Optional;
 
-public class Authenticator implements io.dropwizard.auth.Authenticator<String, JWTWrap> {
+@Slf4j
+public class LuthenAuthenticator implements Authenticator<String, JWTWrap> {
 
     private final String expectedIssuer;
     private final RSAPublicKey publicKey;
 
-    public Authenticator(RSAPublicKey publicKey, String expectedIssuer) {
+    public LuthenAuthenticator(RSAPublicKey publicKey, String expectedIssuer) {
         this.publicKey = publicKey;
         this.expectedIssuer = expectedIssuer;
     }
 
     @Override
     public Optional<JWTWrap> authenticate(String token) {
-        new BitSet();
         try {
             var jwt = getClaims(token);
             return Optional.of(new JWTWrap(jwt));
         } catch (Exception e) {
+            log.error("Exception occurred while authenticating :: {}",e.getMessage());
             return Optional.empty();
         }
     }

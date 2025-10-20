@@ -5,17 +5,14 @@ import com.nimbusds.jwt.SignedJWT;
 import com.shadow2y.luthen.api.contracts.CreateRoleRequest;
 import com.shadow2y.luthen.api.contracts.LoginRequest;
 import com.shadow2y.luthen.api.contracts.LoginResponse;
-import com.shadow2y.luthen.api.models.UserAuth;
-import com.shadow2y.luthen.api.summary.PermissionSummary;
 import com.shadow2y.luthen.api.summary.RoleSummary;
+import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.api.models.UserStatus;
 import com.shadow2y.luthen.service.repository.stores.PermissionStore;
 import com.shadow2y.luthen.service.repository.stores.RoleStore;
 import com.shadow2y.luthen.service.repository.stores.UserStore;
-import com.shadow2y.luthen.service.repository.tables.Permission;
-import com.shadow2y.luthen.service.repository.tables.Role;
 import com.shadow2y.luthen.service.repository.tables.User;
 import com.shadow2y.luthen.service.service.intf.PasswordService;
 import com.shadow2y.luthen.service.service.intf.TokenService;
@@ -25,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 public class AuthService {
@@ -57,36 +53,25 @@ public class AuthService {
         return user;
     }
 
-    public Role validateAndAddPermissions(Role role, List<String> permissionList) throws LuthenError {
-        if(permissionList == null || permissionList.isEmpty()) {
-            return role;
-        }
-        var permissions = validateGetPermissions(permissionList);
-        role.getPermissions().addAll(permissions);
-        role = roleStore.save(role);
-        return role;
-    }
-
-    public Set<Permission> validateGetPermissions(List<String> permissions) throws LuthenError {
-        var permissionsList = permissionStore.getPermissions(permissions);
-        if(permissions.size() != permissionsList.size()) {
-            throw new LuthenError(Error.PERMISSION_NOT_FOUND);
-        }
-        return permissionsList;
-    }
-
-    public PermissionSummary getOrCreatePermission(String permissionName, String description) throws LuthenError {
+    public String getOrCreatePermission(String permissionName, String description) throws LuthenError {
         var permissionOpt = permissionStore.getOrCreatePermission(permissionName, description);
         if(permissionOpt.isPresent()) {
-            return permissionOpt.get().toSummary();
+            return permissionOpt.get().getName();
         }
         throw new LuthenError(Error.INTERNAL_DATABASE_ERROR);
     }
 
+    public UserSummary updateUser(UserSummary request) throws LuthenError {
+        User user = getUser(request.username(), request.email());
+        updateUser(user, request.roles());
+        user = userStore.save(user);
+        return user.toSummary();
+    }
+
     public RoleSummary getOrCreateRole(CreateRoleRequest request) throws LuthenError {
-        var role = roleStore.updateOrCreateRole(request.name(), request.description(), validateGetPermissions(request.permissions()));
+        var role = roleStore.updateOrCreateRole(request.name(), request.description(), request.permissions());
         log.info("Executed getOrCreateRole for role: {}", role.getName());
-        return role.toSummary();
+        return role.getSummary();
     }
 
     public LoginResponse login(LoginRequest request) throws LuthenError {
@@ -167,6 +152,15 @@ public class AuthService {
         }
         log.info("Fetched user :: {} from DB", username);
         return user;
+    }
+
+    public void updateUser(User user, List<String> roleNames) throws LuthenError {
+        try {
+            var roles = roleStore.getRoles(roleNames);
+            user.setRoles(roles);
+        } catch (Exception e) {
+            throw new LuthenError(Error.INTERNAL_DATABASE_ERROR, e);
+        }
     }
 
 }

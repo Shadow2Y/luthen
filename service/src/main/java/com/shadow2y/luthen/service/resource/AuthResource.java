@@ -1,8 +1,8 @@
 package com.shadow2y.luthen.service.resource;
 
 import com.codahale.metrics.annotation.Timed;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.shadow2y.luthen.api.contracts.*;
+import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.service.service.AuthService;
 import io.dropwizard.hibernate.UnitOfWork;
@@ -49,28 +49,40 @@ public class AuthResource {
 
     @POST
     @UnitOfWork
-    @RolesAllowed("test")
+    @RolesAllowed("TEST")
+    @Path("/update/user")
+    public Response updateUser(UserSummary request) throws LuthenError {
+        var response = authService.updateUser(request);
+        return Response.ok()
+                .entity(response)
+                .build();
+    }
+
+    @POST
+    @UnitOfWork
+    @RolesAllowed("TEST")
     @Path("/create/role")
     public Response createRole(CreateRoleRequest request) throws LuthenError {
         var response = authService.getOrCreateRole(request);
-        return jakarta.ws.rs.core.Response.ok()
+        return Response.ok()
                 .entity(response)
                 .build();
     }
 
     @POST
     @UnitOfWork
-    @RolesAllowed("test")
+    @RolesAllowed("TEST")
     @Path("/create/permission")
     public Response createPermission(CreatePermissionRequest request) throws LuthenError {
         var response = authService.getOrCreatePermission(request.name(), request.description());
-        return jakarta.ws.rs.core.Response.ok()
+        return Response.ok()
                 .entity(response)
                 .build();
     }
 
     @POST
     @UnitOfWork
+    @RolesAllowed("TEST")
     @Path("/introspect")
     public Map<String, Object> introspect(String token) throws LuthenError {
         return authService.introspect(token);

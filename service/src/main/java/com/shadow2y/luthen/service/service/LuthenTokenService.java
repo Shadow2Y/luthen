@@ -4,19 +4,16 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.*;
-import com.shadow2y.luthen.api.models.UserAuth;
+import com.shadow2y.commons.Result;
 import com.shadow2y.luthen.api.summary.UserSummary;
+import com.shadow2y.luthen.service.AppConfig;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
-import com.shadow2y.luthen.service.model.Result;
 import com.shadow2y.luthen.service.service.intf.TokenService;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.relation.RelationSupport;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.*;
@@ -32,11 +29,11 @@ public class LuthenTokenService implements TokenService {
     private static final Logger log = LoggerFactory.getLogger(LuthenTokenService.class);
 
     @Inject
-    public LuthenTokenService(RSAPrivateKey privateKey, RSAPublicKey publicKey, String issuer, long accessMinutes) {
-        this.issuer = issuer;
-        this.accessMinutes = accessMinutes;
-        this.signer = new RSASSASigner(privateKey);
-        this.verifier = new RSASSAVerifier(publicKey);
+    public LuthenTokenService(AppConfig appConfig) {
+        this.issuer = appConfig.getIssuer();
+        this.signer = new RSASSASigner(appConfig.getPrivateKey());
+        this.verifier = new RSASSAVerifier(appConfig.getPublicKey());
+        this.accessMinutes = appConfig.authConfig.getJwtExpiryMinutes();
         this.header = new JWSHeader.Builder(JWSAlgorithm.RS256)
                 .type(JOSEObjectType.JWT)
                 .build();
