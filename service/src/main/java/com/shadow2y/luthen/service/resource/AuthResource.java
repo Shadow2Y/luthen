@@ -2,12 +2,7 @@ package com.shadow2y.luthen.service.resource;
 
 import com.codahale.metrics.annotation.Timed;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.shadow2y.luthen.api.request.CreatePermissionRequest;
-import com.shadow2y.luthen.api.request.CreateRoleRequest;
-import com.shadow2y.luthen.api.request.LoginRequest;
-import com.shadow2y.luthen.api.response.LoginResponse;
-import com.shadow2y.luthen.api.request.SignupRequest;
-import com.shadow2y.luthen.api.summary.UserSummary;
+import com.shadow2y.luthen.api.contracts.*;
 import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.service.service.AuthService;
 import io.dropwizard.hibernate.UnitOfWork;
@@ -23,30 +18,22 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
+import java.util.Map;
 
 
 @Path("/auth")
-@Tag(name = "AUTH")
+@Tag(name = "Authentication")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AuthResource {
 
-    private final Logger log = LoggerFactory.getLogger(AuthResource.class);
-
     AuthService authService;
+
+    private final Logger log = LoggerFactory.getLogger(AuthResource.class);
 
     @Inject
     public AuthResource(AuthService authService) {
         this.authService = authService;
-    }
-
-    @POST
-    @Timed
-    @UnitOfWork
-    @Path("/signup")
-    public UserSummary signup(SignupRequest request) throws LuthenError {
-        return authService.signUp(request);
     }
 
     @POST
@@ -61,20 +48,12 @@ public class AuthResource {
     }
 
     @POST
-    @Timed
-    @Path("/test")
-    @RolesAllowed("test")
-    public String test() {
-        return "SUCCESS";
-    }
-
-    @POST
     @UnitOfWork
     @RolesAllowed("test")
     @Path("/create/role")
     public Response createRole(CreateRoleRequest request) throws LuthenError {
         var response = authService.getOrCreateRole(request);
-        return Response.ok()
+        return jakarta.ws.rs.core.Response.ok()
                 .entity(response)
                 .build();
     }
@@ -84,17 +63,17 @@ public class AuthResource {
     @RolesAllowed("test")
     @Path("/create/permission")
     public Response createPermission(CreatePermissionRequest request) throws LuthenError {
-        var response = authService.getOrCreatePermission(request.name, request.description);
-        return Response.ok()
+        var response = authService.getOrCreatePermission(request.name(), request.description());
+        return jakarta.ws.rs.core.Response.ok()
                 .entity(response)
                 .build();
     }
 
     @POST
     @UnitOfWork
-    @Path("/test/decrypt")
-    public JWTClaimsSet decrypt(String token) throws LuthenError {
-        return authService.decrypt(token);
+    @Path("/introspect")
+    public Map<String, Object> introspect(String token) throws LuthenError {
+        return authService.introspect(token);
     }
 
 }

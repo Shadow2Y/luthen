@@ -1,6 +1,5 @@
 package com.shadow2y.luthen.service.repository.common;
 
-
 import com.shadow2y.luthen.service.model.config.ValkeyConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;

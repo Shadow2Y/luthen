@@ -31,8 +31,8 @@ public class LuthenClientResource {
     @UnitOfWork
     @Path("/refresh")
     public ClientRefreshResponse refreshRoles(@HeaderParam("filterKey") String filterKey, ClientRefreshRequest request) throws LuthenError {
-        log.info("Received Client Refresh request");
-        return this.service.getAuthData(filterKey,request);
+        log.info("Received Client Refresh request from :: {}", request.getClientName());
+        return this.service.getAuthData(filterKey, request);
     }
 
 }

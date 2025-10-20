@@ -1,3 +1,9 @@
+asyncExecutor:
+  coreThreads: 4
+  maxThreads: 8
+  queueCapacity: 500
+  keepAliveSeconds: 45
+
 database:
   driverClass: org.postgresql.Driver
   user: ${DB_USERNAME}
@@ -44,11 +50,13 @@ identityConfig:
       "true"
     "mail.smtp.port":
       "587"
+  OtpLength: 6
   valkeyConfig:
     host: ${IDENTITY_DB_HOST}
     port: ${IDENTITY_DB_PORT}
     password: ${IDENTITY_DB_PASSWORD}
     timeout: 300
+    expiryInSeconds: 300
     database: 0
 
 authConfig:

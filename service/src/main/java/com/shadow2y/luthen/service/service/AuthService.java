@@ -1,14 +1,13 @@
 package com.shadow2y.luthen.service.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.shadow2y.luthen.api.request.CreateRoleRequest;
-import com.shadow2y.luthen.api.request.LoginRequest;
-import com.shadow2y.luthen.api.response.LoginResponse;
-import com.shadow2y.luthen.api.request.SignupRequest;
-import com.shadow2y.luthen.api.response.UserAuth;
+import com.nimbusds.jwt.SignedJWT;
+import com.shadow2y.luthen.api.contracts.CreateRoleRequest;
+import com.shadow2y.luthen.api.contracts.LoginRequest;
+import com.shadow2y.luthen.api.contracts.LoginResponse;
+import com.shadow2y.luthen.api.models.UserAuth;
 import com.shadow2y.luthen.api.summary.PermissionSummary;
 import com.shadow2y.luthen.api.summary.RoleSummary;
-import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.api.models.UserStatus;
@@ -23,8 +22,9 @@ import com.shadow2y.luthen.service.service.intf.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.text.ParseException;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -42,19 +42,6 @@ public class AuthService {
         this.permissionStore = permissionStore;
         this.tokenService = tokenService;
         this.passwordService = passwordService;
-    }
-
-    public UserSummary signUp(SignupRequest signupRequest) throws LuthenError {
-        String username = signupRequest.getUsername();
-        String email = signupRequest.getEmail();
-        String password = signupRequest.getPassword();
-        validateNewUser(username, email);
-
-        String hashedPassword = passwordService.hashPassword(password);
-
-        User user = userStore.save(username, email, hashedPassword);
-        log.info("User registered successfully: {}", username);
-        return user.toSummary();
     }
 
     public User validateAndAddRoles(User user, List<String> roleNames) throws LuthenError {
@@ -97,25 +84,35 @@ public class AuthService {
     }
 
     public RoleSummary getOrCreateRole(CreateRoleRequest request) throws LuthenError {
-        var role = roleStore.updateOrCreateRole(request.name, request.description, validateGetPermissions(request.permissions));
+        var role = roleStore.updateOrCreateRole(request.name(), request.description(), validateGetPermissions(request.permissions()));
         log.info("Executed getOrCreateRole for role: {}", role.getName());
         return role.toSummary();
     }
 
     public LoginResponse login(LoginRequest request) throws LuthenError {
-        var user = getUser(request.getUsername(), request.getEmail());
+        var user = getUser(request.username(), request.email());
 
         validateEntity(user, request);
-        var userAuth = tokenService.createAccessToken(new UserAuth(user.getUsername(), user.getRoleNames()));
-        return new LoginResponse()
-                .setAccessToken(userAuth.getAccessToken())
-                .setCreatedAt(userAuth.getCreatedAt().toEpochMilli())
-                .setExpiresAt(userAuth.getExpiresAt().toEpochMilli())
-                ;
+        var signedJWT = tokenService.createAccessToken(user.toSummary());
+        var jwt = getJwt(signedJWT);
+        return new LoginResponse(
+                jwt.getIssueTime().getTime(),
+                jwt.getExpirationTime().getTime(),
+                signedJWT.serialize(),
+                ""
+        );
+    }
+
+    private JWTClaimsSet getJwt(SignedJWT signedJWT) throws LuthenError {
+        try {
+            return signedJWT.getJWTClaimsSet();
+        } catch (ParseException e) {
+            throw new LuthenError(Error.INTERNAL_SERVER_ERROR, e);
+        }
     }
 
     private void validateEntity(User user, LoginRequest request) throws LuthenError {
-        if (!passwordService.verifyPassword(request.getPassword(), user.getPassword())) {
+        if (!passwordService.verifyPassword(request.password(), user.getPassword())) {
             throw new LuthenError(Error.INVALID_CREDENTIALS);
         }
         if (!UserStatus.ACTIVE.equals(user.getStatus())) {
@@ -125,18 +122,8 @@ public class AuthService {
         log.debug("Validated user with username :: {}", user.getUsername());
     }
 
-    private void validateNewUser(String username, String email) throws LuthenError {
-        if (userStore.existsByUsername(username)) {
-            throw new LuthenError(Error.USERNAME_ALREADY_EXISTS);
-        }
-
-        if (userStore.existsByEmail(email)) {
-            throw new LuthenError(Error.EMAIL_ALREADY_EXISTS);
-        }
-    }
-
-    public JWTClaimsSet decrypt(String token) throws LuthenError {
-        return tokenService.validateGetClaims(token);
+    public Map<String,Object> introspect(String token) throws LuthenError {
+        return tokenService.validateGetClaims(token).get().toJSONObject();
     }
 
     public void logout(String token) {
@@ -150,15 +137,6 @@ public class AuthService {
     public boolean validateSession(String token) {
         return tokenService.verifyAccessToken(token);
     }
-
-//    public Optional<User> getUserFromToken(String token) {
-//        Optional<SessionToken> sessionOpt = tokenRepository.findByToken(token);
-//        if (sessionOpt.isEmpty() || !sessionOpt.get().isActive() || sessionOpt.get().isExpired()) {
-//            return Optional.empty();
-//        }
-//
-//        return userStore.findById(sessionOpt.get().getUserId());
-//    }
 
     public void changePassword(String username, String currentPassword, String newPassword) throws LuthenError {
         User user = getUser(username,null);
@@ -178,17 +156,17 @@ public class AuthService {
     }
 
     public User getUser(String username, String email) throws LuthenError {
-        Optional<User> user = Optional.empty();
+        User user = null;
         if(!StringUtils.isEmpty(email)) {
-            user = userStore.findByEmail(email);
+            user = userStore.findByEmail(email).orElse(null);
         } else if(!StringUtils.isEmpty(username)) {
-            user = userStore.findByUsername(username);
+            user = userStore.findByUsername(username).orElse(null);
         }
-        if(user.isEmpty()) {
+        if(user==null) {
             throw new LuthenError(Error.INVALID_USER_OR_CREDENTIALS);
         }
         log.info("Fetched user :: {} from DB", username);
-        return user.get();
+        return user;
     }
 
 }

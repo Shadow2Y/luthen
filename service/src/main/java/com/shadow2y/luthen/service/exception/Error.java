@@ -1,7 +1,6 @@
 package com.shadow2y.luthen.service.exception;
 
 import io.dropwizard.jersey.errors.ErrorMessage;
-import lombok.Getter;
 
 public enum Error {
 
@@ -31,12 +30,12 @@ public enum Error {
     TOKEN_AUTHENTICATION_FAILED(500, "Token Authentication Failed"),
     CLIENT_VALIDATION_FAILED(500, "Client Validation Failed"),
     CLIENT_FILTER_VALIDATION_FAILED(500, "Client Filter Validation Failed"),
+    VALIDATION_FAILED(500, "Validation Failed"),
     SIGNUP_MAIL_FAILED(500, "Error occurred while attempting Signup flow"),
     OTP_VALIDATION_FAILED(500, "Unable to validate OTP"),
     ;
 
-    @Getter
-    private final ErrorMessage errorMessage;
+    public final ErrorMessage errorMessage;
 
     Error(int statusCode, String reason) {
         this.errorMessage = new ErrorMessage(statusCode, reason);

@@ -1,13 +1,16 @@
 package com.shadow2y.luthen.service.service.intf;
 
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.shadow2y.luthen.api.response.UserAuth;
+import com.nimbusds.jwt.SignedJWT;
+import com.shadow2y.luthen.api.models.UserAuth;
+import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.LuthenError;
+import com.shadow2y.luthen.service.model.Result;
 
 public interface TokenService {
-    UserAuth createAccessToken(UserAuth userAuth);
+    SignedJWT createAccessToken(UserSummary userSummary);
     boolean verifyAccessToken(String token);
-    JWTClaimsSet validateGetClaims(String token) throws LuthenError;
+    Result<JWTClaimsSet,LuthenError> validateGetClaims(String token);
     void invalidateToken(String token);
     void invalidateAllUserTokens(String userId);
 }

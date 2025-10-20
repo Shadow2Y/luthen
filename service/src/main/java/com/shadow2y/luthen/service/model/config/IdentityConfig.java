@@ -1,6 +1,8 @@
 package com.shadow2y.luthen.service.model.config;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 
 import java.util.Properties;
@@ -20,8 +22,8 @@ public class IdentityConfig {
     @Valid
     public final Properties emailProperties;
 
-    @Valid
-    public final int OTPLength;
+    @Valid @Min(2) @Max(8)
+    public final int OtpLength;
 
     @Valid
     public final ValkeyConfig valkeyConfig;

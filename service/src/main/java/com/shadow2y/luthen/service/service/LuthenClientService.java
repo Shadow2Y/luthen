@@ -28,11 +28,11 @@ import java.util.stream.Collectors;
 @Singleton
 public class LuthenClientService {
 
-    private final Logger log = LoggerFactory.getLogger(LuthenClientService.class);
-
     AppConfig appConfig;
     RoleStore roleStore;
     PermissionStore permissionStore;
+
+    private final Logger log = LoggerFactory.getLogger(LuthenClientService.class);
 
     @Inject
     public LuthenClientService(AppConfig appConfig, RoleStore roleStore, PermissionStore permissionStore) {

@@ -1,4 +1,4 @@
-package com.shadow2y.luthen.api.response;
+package com.shadow2y.luthen.api.models;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -36,5 +36,6 @@ public class UserAuth implements Principal {
     public boolean implies(Subject subject) {
         return Principal.super.implies(subject);
     }
+
 }
 

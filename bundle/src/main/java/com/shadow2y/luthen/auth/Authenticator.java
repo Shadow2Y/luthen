@@ -4,13 +4,16 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.shadow2y.luthen.api.response.UserAuth;
+import com.shadow2y.luthen.api.models.UserAuth;
+import com.shadow2y.luthen.auth.models.JWTWrap;
+import org.apache.commons.lang3.BitField;
 
 import java.security.interfaces.RSAPublicKey;
+import java.util.BitSet;
 import java.util.Date;
 import java.util.Optional;
 
-public class Authenticator implements io.dropwizard.auth.Authenticator<String, UserAuth> {
+public class Authenticator implements io.dropwizard.auth.Authenticator<String, JWTWrap> {
 
     private final String expectedIssuer;
     private final RSAPublicKey publicKey;
@@ -21,11 +24,11 @@ public class Authenticator implements io.dropwizard.auth.Authenticator<String, U
     }
 
     @Override
-    public Optional<UserAuth> authenticate(String token) {
+    public Optional<JWTWrap> authenticate(String token) {
+        new BitSet();
         try {
             var jwt = getClaims(token);
-            var user = new UserAuth(jwt.getSubject(), jwt.getStringListClaim("roles"));
-            return Optional.of(user);
+            return Optional.of(new JWTWrap(jwt));
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -48,8 +51,6 @@ public class Authenticator implements io.dropwizard.auth.Authenticator<String, U
         }
         return claims;
     }
-
-
 
 }
 

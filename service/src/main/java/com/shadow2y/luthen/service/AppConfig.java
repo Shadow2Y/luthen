@@ -1,9 +1,6 @@
 package com.shadow2y.luthen.service;
 
-import com.shadow2y.luthen.service.model.config.IdentityConfig;
-import com.shadow2y.luthen.service.model.config.LuthenAuthConfig;
-import com.shadow2y.luthen.service.model.config.LuthenClientConfig;
-import com.shadow2y.luthen.service.model.config.LuthenClient;
+import com.shadow2y.luthen.service.model.config.*;
 import io.dropwizard.core.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
@@ -17,6 +14,9 @@ import java.util.Map;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AppConfig extends Configuration {
+
+    @Valid
+    public final AsyncExecutorConfig asyncExecutor;
 
     @Valid @NotNull
     public final DataSourceFactory database;

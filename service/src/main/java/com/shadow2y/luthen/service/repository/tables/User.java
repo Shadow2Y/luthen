@@ -16,7 +16,7 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 @NamedQueries({
         @NamedQuery(name = "User.findAll", query = "SELECT u FROM User u"),
         @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
@@ -35,7 +35,6 @@ public class User {
     private String username;
 
     @Setter
-    @UniqueElements
     @Column(name = "email", nullable = false)
     private String email;
 

@@ -1,5 +1,6 @@
 package com.shadow2y.luthen.service.repository.stores;
 
+import com.shadow2y.luthen.service.model.Result;
 import com.shadow2y.luthen.service.repository.tables.User;
 import io.dropwizard.hibernate.AbstractDAO;
 import jakarta.inject.Inject;
@@ -31,12 +32,12 @@ public class UserStore extends AbstractDAO<User> {
         return save(user);
     }
 
-    public Optional<User> findByUsername(String username) {
-        return currentSession()
+    public Result<User,?> findByUsername(String username) {
+        return Result.from(currentSession()
                 .createNamedQuery("User.findByUsername", User.class)
                 .setParameter("username", username)
                 .getResultStream()
-                .findFirst();
+                .findFirst());
     }
 
     public boolean existsByUsername(String username) {

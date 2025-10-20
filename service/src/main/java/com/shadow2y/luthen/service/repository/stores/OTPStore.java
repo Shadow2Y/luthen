@@ -1,34 +1,35 @@
 package com.shadow2y.luthen.service.repository.stores;
 
+import com.shadow2y.luthen.service.model.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.util.Optional;
+
 public class OTPStore {
 
     private static final Logger log = LoggerFactory.getLogger(OTPStore.class);
 
+    final int expiryInSeconds;
     final JedisPool jedisPool;
+    private final String OtpKey = "otp:email:";
 
-    public OTPStore(JedisPool jedisPool) {
+    public OTPStore(JedisPool jedisPool, int expiryInSeconds) {
         this.jedisPool = jedisPool;
+        this.expiryInSeconds = expiryInSeconds;
     }
 
     public void save(String emailId, String otp) {
         try (Jedis jedis = jedisPool.getResource()) {
-            // Store OTP for 5 minutes (300 seconds)
-            jedis.setex("otp:email:" + emailId, 300, otp);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            jedis.setex(OtpKey + emailId, expiryInSeconds, otp);
         }
     }
 
-    public String getOtp(String emailId) {
+    public Result<String,?> getOtp(String emailId) {
         try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.get("otp:email:" + emailId);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            return Result.of(jedis.get(OtpKey + emailId));
         }
     }
 

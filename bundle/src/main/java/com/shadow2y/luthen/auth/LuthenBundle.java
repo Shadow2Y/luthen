@@ -1,6 +1,7 @@
 package com.shadow2y.luthen.auth;
 
-import com.shadow2y.luthen.api.response.UserAuth;
+import com.shadow2y.luthen.api.models.UserAuth;
+import com.shadow2y.luthen.auth.models.JWTWrap;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.Authenticator;
@@ -22,11 +23,11 @@ public class LuthenBundle<T extends Configuration> implements ConfiguredBundle<T
 
     @Override
     public void run(T config, Environment env) {
-        Authenticator<String,UserAuth> authenticator = new com.shadow2y.luthen.auth.Authenticator(publicKey,"luthen");
+        Authenticator<String, JWTWrap> authenticator = new com.shadow2y.luthen.auth.Authenticator(publicKey,"luthen");
         RoleAuthorizer authorizer = new RoleAuthorizer();
 
-        OAuthCredentialAuthFilter<UserAuth> filter =
-                new OAuthCredentialAuthFilter.Builder<UserAuth>()
+        OAuthCredentialAuthFilter<JWTWrap> filter =
+                new OAuthCredentialAuthFilter.Builder<JWTWrap>()
                         .setAuthenticator(authenticator)
                         .setAuthorizer(authorizer)
                         .setPrefix("Bearer")
