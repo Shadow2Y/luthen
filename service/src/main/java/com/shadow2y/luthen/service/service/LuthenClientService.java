@@ -1,5 +1,6 @@
 package com.shadow2y.luthen.service.service;
 
+import com.shadow2y.luthen.api.summary.RoleSummary;
 import com.shadow2y.luthen.service.AppConfig;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
@@ -7,6 +8,7 @@ import com.shadow2y.luthen.service.model.config.LuthenClient;
 import com.shadow2y.luthen.auth.models.LuthenClientConfig;
 import com.shadow2y.luthen.api.contracts.ClientRefreshRequest;
 import com.shadow2y.luthen.api.contracts.ClientRefreshResponse;
+import com.shadow2y.luthen.service.repository.stores.CacheStore;
 import com.shadow2y.luthen.service.repository.stores.PermissionStore;
 import com.shadow2y.luthen.service.repository.stores.RoleStore;
 import com.shadow2y.luthen.service.repository.tables.Role;
@@ -28,16 +30,14 @@ import java.util.stream.Collectors;
 public class LuthenClientService {
 
     AppConfig appConfig;
-    RoleStore roleStore;
-    PermissionStore permissionStore;
+    CacheService cacheService;
 
     private final Logger log = LoggerFactory.getLogger(LuthenClientService.class);
 
     @Inject
-    public LuthenClientService(AppConfig appConfig, RoleStore roleStore, PermissionStore permissionStore) {
+    public LuthenClientService(AppConfig appConfig, CacheService cacheService) {
         this.appConfig = appConfig;
-        this.roleStore = roleStore;
-        this.permissionStore = permissionStore;
+        this.cacheService = cacheService;
         ClientFilter.init(appConfig.authConfig.getFilterAlgorithm(), appConfig.authConfig.getFilterSeed(), appConfig.authConfig.getFilteringWindowMins());
     }
 
@@ -45,7 +45,8 @@ public class LuthenClientService {
         validateFilterKey(filterKey);
         var clientConfig = getClientConfig(request.getClientName());
         validateLuthenClient(request.getClientId(), request.getClientSecret(), clientConfig.getId(), clientConfig.getSecret());
-        var roles = roleStore.getAllRoles();
+        var roles = cacheService.fetchClientLookup();
+//        var blacklists = cacheService.
         return toRefreshResponse(getExpiryTime(clientConfig), List.of(), roles);
     }
 
@@ -57,11 +58,11 @@ public class LuthenClientService {
         }
     }
 
-    private ClientRefreshResponse toRefreshResponse(Instant expiryTime, List<String> invalidatedTokens, List<Role> roles) {
+    private ClientRefreshResponse toRefreshResponse(Instant expiryTime, List<String> invalidatedTokens, List<RoleSummary> roles) {
         var response = new ClientRefreshResponse();
         response.setExpiryTime(expiryTime);
         response.setBlacklistedUsers(new HashSet<>(invalidatedTokens));
-        response.setRoleList(getRolesAsMap(roles));
+        response.setRoleList(roles);
         return response;
     }
 

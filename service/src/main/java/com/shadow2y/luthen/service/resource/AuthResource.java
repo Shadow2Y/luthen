@@ -6,13 +6,11 @@ import com.shadow2y.luthen.api.summary.UserSummary;
 import com.shadow2y.luthen.service.exception.LuthenError;
 import com.shadow2y.luthen.service.service.AuthService;
 import io.dropwizard.hibernate.UnitOfWork;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -45,6 +43,16 @@ public class AuthResource {
         var response = authService.login(request);
         log.info("Responding to `/login` request");
         return response;
+    }
+
+    @POST
+    @Timed
+    @UnitOfWork
+    @Path("/logout")
+    public Response logout(@HeaderParam("Authorization") String token) throws LuthenError {
+        log.info("Received `/logout` request");
+        authService.logout(token);
+        return Response.ok().build();
     }
 
     @POST

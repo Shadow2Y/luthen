@@ -1,13 +1,13 @@
 package com.shadow2y.luthen.auth.models;
 
 
-import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.ECPublicKey;
 
 public interface LuthenBundleConfig {
 
     LuthenClientConfig getLuthenClientConfig(String clientName);
 
-    RSAPublicKey getPublicKey();
+    ECPublicKey getPublicKey();
 
     String getIssuer();
 

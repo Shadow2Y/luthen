@@ -17,10 +17,10 @@ public class LuthenAuthConfig {
     private String issuer;
 
     @NotEmpty
-    private String rsaPrivateKey;
+    private String privateKey;
 
     @NotEmpty
-    private String rsaPublicKey;
+    private String publicKey;
 
     @Valid @NotNull
     private String filterAlgorithm;

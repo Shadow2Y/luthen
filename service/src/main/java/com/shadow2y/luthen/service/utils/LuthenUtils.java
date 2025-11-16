@@ -1,6 +1,7 @@
 package com.shadow2y.luthen.service.utils;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -32,6 +33,10 @@ public final class LuthenUtils {
             sb.append(RANDOM.nextInt(10));
         }
         return sb.toString();
+    }
+
+    public static long getEpochSecond() {
+        return Instant.now().getEpochSecond();
     }
 
 }

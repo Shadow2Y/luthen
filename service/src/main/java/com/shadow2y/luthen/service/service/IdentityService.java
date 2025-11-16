@@ -6,10 +6,9 @@ import com.shadow2y.luthen.api.contracts.SignupInitResponse;
 import com.shadow2y.luthen.api.contracts.SignupVerifyRequest;
 import com.shadow2y.luthen.api.contracts.SignupVerifyResponse;
 import com.shadow2y.luthen.api.summary.UserSummary;
+import com.shadow2y.luthen.service.AppConfig;
 import com.shadow2y.luthen.service.exception.Error;
 import com.shadow2y.luthen.service.exception.LuthenError;
-import com.shadow2y.luthen.service.model.config.IdentityConfig;
-import com.shadow2y.luthen.service.repository.stores.OTPStore;
 import com.shadow2y.luthen.service.repository.stores.UserStore;
 import com.shadow2y.luthen.service.repository.tables.User;
 import com.shadow2y.luthen.service.service.intf.PasswordService;
@@ -35,18 +34,20 @@ public class IdentityService {
     final InternetAddress internetAddress;
 
     final Session session;
-    final OTPStore otpStore;
+    final CacheService cacheService;
     final UserStore userStore;
     final PasswordService passwordService;
 
     private final Logger log = LoggerFactory.getLogger(IdentityService.class);
 
     @Inject
-    public IdentityService(PasswordService passwordService, UserStore userStore, OTPStore otpStore, IdentityConfig identityConfig) throws AddressException {
-        this.config = new Config(identityConfig.OtpLength, identityConfig.valkeyConfig.expiryInSeconds, identityConfig.smtpHost, identityConfig.emailId, identityConfig.emailPassword);
+    public IdentityService(CacheService cacheService, PasswordService passwordService, UserStore userStore, AppConfig appConfig) throws AddressException {
+        var cacheConfig = appConfig.cacheConfig;
+        var identityConfig = appConfig.identityConfig;
+        this.config = new Config(identityConfig.otpLength, identityConfig.otpExpirySeconds, identityConfig.smtpHost, identityConfig.emailId, identityConfig.emailPassword);
         this.session = getSession(this.config, identityConfig.emailProperties);
 
-        this.otpStore = otpStore;
+        this.cacheService = cacheService;
         this.userStore = userStore;
         this.passwordService = passwordService;
         this.internetAddress = new InternetAddress(config.emailId);
@@ -129,7 +130,7 @@ public class IdentityService {
 
     public void validateSignupOtp(String emailId, String otp) throws LuthenError {
         Validate.string(otp);
-        String storedOtp = otpStore.getOtp(emailId)
+        String storedOtp = cacheService.getOtp(emailId)
                 .elseThrow(() -> new LuthenError(Error.INTERNAL_DATABASE_ERROR));
         Validate.string(storedOtp);
         if(!Objects.equals(otp, storedOtp)) {
@@ -149,7 +150,7 @@ public class IdentityService {
 
     public String generateOTP(String email) {
         var otp = LuthenUtils.generateRandomDigits(config.otpLen);
-        otpStore.save(email, otp);
+        cacheService.saveOtp(email, otp);
         log.info("Successfully saved OTP to store :: {}",email);
         return otp;
     }
@@ -165,7 +166,7 @@ public class IdentityService {
 
     record Config(
             int otpLen,
-            int otpExpirySeconds,
+            long otpExpirySeconds,
             String host,
             String emailId,
             String password

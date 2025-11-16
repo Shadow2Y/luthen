@@ -2,9 +2,10 @@ package com.shadow2y.luthen.service.model.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.shadow2y.commons.executor.intf.AsyncExecutorConfig;
 import jakarta.validation.constraints.Min;
 
-public class ExecutorConfig implements com.shadow2y.commons.executor.AsyncExecutorConfig {
+public class ExecutorConfig implements AsyncExecutorConfig {
 
     @Min(1) @JsonProperty
     private int coreThreads = Math.max(2, Runtime.getRuntime().availableProcessors());

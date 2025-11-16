@@ -2,7 +2,6 @@ package com.shadow2y.luthen.service.repository.stores;
 
 import com.shadow2y.commons.Result;
 import com.shadow2y.luthen.service.repository.tables.User;
-import io.dropwizard.hibernate.AbstractDAO;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
@@ -12,7 +11,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 @Singleton
-public class UserStore extends AbstractDAO<User> {
+public class UserStore extends BaseDAO<User> {
     private static final Logger log = Logger.getLogger(UserStore.class.getName());
 
     @Inject

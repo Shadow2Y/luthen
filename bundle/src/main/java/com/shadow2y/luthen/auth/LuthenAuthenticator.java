@@ -1,14 +1,14 @@
 package com.shadow2y.luthen.auth;
 
 import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.shadow2y.luthen.auth.models.JWTWrap;
 import io.dropwizard.auth.Authenticator;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.ECPublicKey;
 import java.util.Date;
 import java.util.Optional;
 
@@ -16,9 +16,9 @@ import java.util.Optional;
 public class LuthenAuthenticator implements Authenticator<String, JWTWrap> {
 
     private final String expectedIssuer;
-    private final RSAPublicKey publicKey;
+    private final ECPublicKey publicKey;
 
-    public LuthenAuthenticator(RSAPublicKey publicKey, String expectedIssuer) {
+    public LuthenAuthenticator(ECPublicKey publicKey, String expectedIssuer) {
         this.publicKey = publicKey;
         this.expectedIssuer = expectedIssuer;
     }
@@ -36,7 +36,7 @@ public class LuthenAuthenticator implements Authenticator<String, JWTWrap> {
 
     public JWTClaimsSet getClaims(String token) throws Exception {
         SignedJWT jwt = SignedJWT.parse(token);
-        JWSVerifier verifier = new RSASSAVerifier(publicKey);
+        JWSVerifier verifier = new ECDSAVerifier(publicKey);
         if (!jwt.verify(verifier)) {
             throw new SecurityException("Invalid signature");
         }

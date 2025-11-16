@@ -1,6 +1,7 @@
 package com.shadow2y.luthen.service.repository.stores;
 
 import com.shadow2y.luthen.service.repository.tables.Permission;
+import jakarta.inject.Inject;
 import org.hibernate.SessionFactory;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Set;
 
 public class PermissionStore extends BaseDAO<Permission> {
 
+    @Inject
     public PermissionStore(SessionFactory sessionFactory) {
         super(sessionFactory);
     }

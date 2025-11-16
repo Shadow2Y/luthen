@@ -1,12 +1,14 @@
 package com.shadow2y.luthen.service.health;
 
 import com.codahale.metrics.health.HealthCheck;
+import jakarta.inject.Inject;
 import org.hibernate.SessionFactory;
 
 public class DatabaseHealthCheck extends HealthCheck {
 
     private final SessionFactory sessionFactory;
 
+    @Inject
     public DatabaseHealthCheck(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
     }

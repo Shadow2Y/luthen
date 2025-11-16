@@ -16,6 +16,7 @@ import com.shadow2y.luthen.service.repository.stores.UserStore;
 import com.shadow2y.luthen.service.repository.tables.User;
 import com.shadow2y.luthen.service.service.intf.PasswordService;
 import com.shadow2y.luthen.service.service.intf.TokenService;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,16 +27,19 @@ import java.util.Map;
 @Slf4j
 public class AuthService {
 
+    private final CacheService cacheService;
     private final TokenService tokenService;
     private final PasswordService passwordService;
     private final UserStore userStore;
     private final RoleStore roleStore;
     private final PermissionStore permissionStore;
 
-    public AuthService(TokenService tokenService, PasswordService passwordService, UserStore userStore, RoleStore roleStore, PermissionStore permissionStore) {
+    @Inject
+    public AuthService(CacheService cacheService, TokenService tokenService, PasswordService passwordService, UserStore userStore, RoleStore roleStore, PermissionStore permissionStore) {
         this.roleStore = roleStore;
         this.userStore = userStore;
         this.permissionStore = permissionStore;
+        this.cacheService = cacheService;
         this.tokenService = tokenService;
         this.passwordService = passwordService;
     }
@@ -88,6 +92,13 @@ public class AuthService {
         );
     }
 
+    public void logout(String token) throws LuthenError {
+        var jwtOpt = tokenService.getJwt(token);
+        jwtOpt.orElseThrow(() -> new LuthenError(Error.INVALID_TOKEN));
+        var jwt = jwtOpt.get();
+        cacheService.blacklistUser(jwt.getSubject());
+    }
+
     private JWTClaimsSet getJwt(SignedJWT signedJWT) throws LuthenError {
         try {
             return signedJWT.getJWTClaimsSet();
@@ -111,14 +122,6 @@ public class AuthService {
         return tokenService.validateGetClaims(token).get().toJSONObject();
     }
 
-    public void logout(String token) {
-        tokenService.invalidateToken(token);
-    }
-
-    public void logoutAllSessions(String userId) {
-        tokenService.invalidateAllUserTokens(userId);
-    }
-
     public boolean validateSession(String token) {
         return tokenService.verifyAccessToken(token);
     }
@@ -135,9 +138,6 @@ public class AuthService {
         String hashedNewPassword = passwordService.hashPassword(newPassword);
         user.setPassword(hashedNewPassword);
         userStore.save(user);
-
-        // Invalidate all existing sessions for security
-        tokenService.invalidateAllUserTokens(username);
     }
 
     public User getUser(String username, String email) throws LuthenError {
@@ -150,7 +150,7 @@ public class AuthService {
         if(user==null) {
             throw new LuthenError(Error.INVALID_USER_OR_CREDENTIALS);
         }
-        log.info("Fetched user :: {} from DB", username);
+        log.info("Fetched user :: `{}` from DB", username);
         return user;
     }
 

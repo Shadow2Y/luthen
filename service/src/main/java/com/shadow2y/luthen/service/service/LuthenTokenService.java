@@ -1,8 +1,8 @@
 package com.shadow2y.luthen.service.service;
 
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jwt.*;
 import com.shadow2y.commons.Result;
 import com.shadow2y.luthen.api.summary.UserSummary;
@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.interfaces.ECPrivateKey;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.*;
@@ -29,12 +30,12 @@ public class LuthenTokenService implements TokenService {
     private static final Logger log = LoggerFactory.getLogger(LuthenTokenService.class);
 
     @Inject
-    public LuthenTokenService(AppConfig appConfig) {
+    public LuthenTokenService(AppConfig appConfig) throws JOSEException {
         this.issuer = appConfig.getIssuer();
-        this.signer = new RSASSASigner(appConfig.getPrivateKey());
-        this.verifier = new RSASSAVerifier(appConfig.getPublicKey());
+        this.signer = new ECDSASigner((ECPrivateKey) appConfig.getPrivateKey());
+        this.verifier = new ECDSAVerifier(appConfig.getPublicKey());
         this.accessMinutes = appConfig.authConfig.getJwtExpiryMinutes();
-        this.header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+        this.header = new JWSHeader.Builder(JWSAlgorithm.ES256)
                 .type(JOSEObjectType.JWT)
                 .build();
     }
@@ -91,8 +92,12 @@ public class LuthenTokenService implements TokenService {
     @Override
     public Result<JWTClaimsSet,LuthenError> validateGetClaims(String token) {
         try {
+            var signedJWTOpt = getSignedJwt(token);
+            if(signedJWTOpt.isEmpty()) {
+                return Result.error(new LuthenError(Error.INVALID_TOKEN));
+            }
+            var signedJWT = signedJWTOpt.get();
             log.debug("Validating token: {}", token);
-            SignedJWT signedJWT = SignedJWT.parse(token);
 
             if (!signedJWT.verify(verifier)) {
                 return Result.error(new LuthenError(Error.INVALID_TOKEN_SIGNATURE));
@@ -114,13 +119,27 @@ public class LuthenTokenService implements TokenService {
     }
 
     @Override
-    public void invalidateToken(String token) {
-//        sessionStore.deleteByToken(token);
+    public Optional<JWTClaimsSet> getJwt(String token) {
+        var signedJwtOpt = getSignedJwt(token);
+        if(signedJwtOpt.isPresent()) {
+            try {
+                return Optional.of(signedJwtOpt.get().getJWTClaimsSet());
+            } catch (ParseException e) {
+                log.error("Error parsing claims", e);
+            }
+        }
+        return Optional.empty();
     }
 
-    @Override
-    public void invalidateAllUserTokens(String userId) {
-//        sessionStore.deleteByUserId(userId);
+    private Optional<SignedJWT> getSignedJwt(String token) {
+        try {
+            log.debug("Parsing token: {}", token);
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            return Optional.of(signedJWT);
+        } catch (ParseException e) {
+            log.error("Token Parsing failed", e);
+            return Optional.empty();
+        }
     }
 
 }

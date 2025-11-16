@@ -13,8 +13,8 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 
 import java.security.KeyPair;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -38,6 +38,9 @@ public class AppConfig extends Configuration implements LuthenBundleConfig {
     private KeyPair keyPair;
 
     @Valid
+    public final CacheConfig cacheConfig;
+
+    @Valid
     public Map<LuthenClient, LuthenClientConfig> clientConfigs;
 
     @Override
@@ -47,22 +50,22 @@ public class AppConfig extends Configuration implements LuthenBundleConfig {
 
     public KeyPair getKeyPair() {
         if(keyPair==null)
-            keyPair = CryptoUtils.validateGenerateKeys(authConfig.getRsaPublicKey(), authConfig.getRsaPrivateKey());
+            keyPair = CryptoUtils.validateGenerateKeys(authConfig.getPublicKey(), authConfig.getPrivateKey());
         return keyPair;
     }
 
     @Override
-    public RSAPublicKey getPublicKey() {
-        return (RSAPublicKey) getKeyPair().getPublic();
+    public ECPublicKey getPublicKey() {
+        return (ECPublicKey) getKeyPair().getPublic();
+    }
+
+    public ECPrivateKey getPrivateKey() {
+        return (ECPrivateKey) getKeyPair().getPrivate();
     }
 
     @Override
     public String getIssuer() {
         return authConfig.getIssuer();
-    }
-
-    public RSAPrivateKey getPrivateKey() {
-        return (RSAPrivateKey) getKeyPair().getPrivate();
     }
 
 }

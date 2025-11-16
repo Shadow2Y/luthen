@@ -1,12 +1,12 @@
 package com.shadow2y.luthen.service.model.config;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 
+import java.util.Map;
+
 @AllArgsConstructor
-public class ValkeyConfig {
+public class CacheConfig {
 
     @Valid
     public String host;
@@ -23,7 +23,12 @@ public class ValkeyConfig {
     public final int database;
 
     @Valid
-    public final int expiryInSeconds;
+    public final long lookupTtl;
+
+    @Valid
+    public final long defaultExpirySeconds;
+
+    public final Map<String, Long> keyToTtlInSeconds;
 
 }
 

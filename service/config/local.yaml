@@ -33,6 +33,14 @@ database:
     hibernate.show_sql: false
     hibernate.format_sql: true
 
+cacheConfig:
+  host: ${IDENTITY_DB_HOST}
+  port: ${IDENTITY_DB_PORT}
+  password: ${IDENTITY_DB_PASSWORD}
+  timeout: 300
+  defaultExpirySeconds: 300
+  database: 0
+
 swaggerBundleConfiguration:
   resourcePackage: com.shadow2y.luthen.service.resource
   title: Luthen API
@@ -61,14 +69,8 @@ identityConfig:
       "true"
     "mail.smtp.port":
       "587"
-  OtpLength: 6
-  valkeyConfig:
-    host: ${IDENTITY_DB_HOST}
-    port: ${IDENTITY_DB_PORT}
-    password: ${IDENTITY_DB_PASSWORD}
-    timeout: 300
-    expiryInSeconds: 300
-    database: 0
+  otpLength: 6
+  otpExpirySeconds: 300
 
 authConfig:
   jwtExpiryMinutes: 10
@@ -77,8 +79,8 @@ authConfig:
   filterSeed: ${CLIENT_FILTER_SEED}
   filteringWindowMins: 5
   issuer: luthen
-  rsaPrivateKey: ${RSA_PRIVATE_KEY}
-  rsaPublicKey: ${RSA_PUBLIC_KEY}
+  privateKey: ${PRIVATE_KEY}
+  publicKey: ${PUBLIC_KEY}
 
 clientConfigs:
    MOVITRAK:

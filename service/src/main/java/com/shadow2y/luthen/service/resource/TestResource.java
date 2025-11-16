@@ -1,9 +1,11 @@
 package com.shadow2y.luthen.service.resource;
 
 import com.shadow2y.luthen.auth.models.JWTWrap;
+import com.shadow2y.luthen.service.AppConfig;
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -20,6 +22,9 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class TestResource {
+
+    @Inject
+    public TestResource(AppConfig appConfig) {}
 
     @GET
     @Path("/token")

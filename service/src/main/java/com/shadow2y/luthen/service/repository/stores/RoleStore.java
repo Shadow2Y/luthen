@@ -1,6 +1,7 @@
 package com.shadow2y.luthen.service.repository.stores;
 
 import com.shadow2y.luthen.service.repository.tables.Role;
+import jakarta.inject.Inject;
 import org.hibernate.SessionFactory;
 
 import java.util.HashSet;
@@ -12,6 +13,7 @@ public class RoleStore extends BaseDAO<Role> {
 
     final PermissionStore permissionStore;
 
+    @Inject
     public RoleStore(PermissionStore permissionStore, SessionFactory sessionFactory) {
         super(sessionFactory);
         this.permissionStore = permissionStore;

@@ -23,9 +23,9 @@ public class IdentityConfig {
     public final Properties emailProperties;
 
     @Valid @Min(2) @Max(8)
-    public final int OtpLength;
+    public final int otpLength;
 
-    @Valid
-    public final ValkeyConfig valkeyConfig;
+    @Valid @Min(1)
+    public final long otpExpirySeconds;
 
 }

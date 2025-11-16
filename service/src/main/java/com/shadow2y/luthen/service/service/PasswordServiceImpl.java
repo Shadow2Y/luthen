@@ -1,9 +1,19 @@
 package com.shadow2y.luthen.service.service;
 
+import com.shadow2y.luthen.service.AppConfig;
 import com.shadow2y.luthen.service.service.intf.PasswordService;
+import jakarta.inject.Inject;
 import org.mindrot.jbcrypt.BCrypt;
 
-public record PasswordServiceImpl(int saltRounds) implements PasswordService {
+
+public class PasswordServiceImpl implements PasswordService {
+
+    private final int saltRounds;
+
+    @Inject
+    public PasswordServiceImpl(AppConfig appConfig) {
+        this.saltRounds = appConfig.authConfig.getPasswordSaltRounds();
+    }
 
     @Override
     public String hashPassword(String plainPassword) {

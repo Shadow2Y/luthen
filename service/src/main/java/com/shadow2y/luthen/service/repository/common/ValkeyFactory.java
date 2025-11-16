@@ -1,12 +1,12 @@
 package com.shadow2y.luthen.service.repository.common;
 
-import com.shadow2y.luthen.service.model.config.ValkeyConfig;
+import com.shadow2y.luthen.service.model.config.CacheConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class ValkeyFactory {
 
-    public static JedisPool build(ValkeyConfig config) {
+    public static JedisPool build(CacheConfig config) {
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         return new JedisPool(
                 poolConfig,
